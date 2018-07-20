@@ -108,6 +108,7 @@ CompilationStatus compile_hex(u8 is16){
             pending_labels[pendingPointer].offset = *offset;
             pendingPointer++;
             labelPointer++;
+            (*offset) += 2;
             return COMPILE_OK;
         }
         perr("[line %d] Expected %d bit number [received '%.*s']", t.line, (8*(is16 + 1)), t.length, t.start);
