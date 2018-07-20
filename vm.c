@@ -107,6 +107,7 @@ void run(Machine *m, u8 *memory){
 
     Bytecode opcode;
     while((opcode = (Bytecode)NEXT_BYTE()) != BYTECODE_hlt){
+        bytecode_disassemble(memory, m->pc - 1);
         print_machine(m);
         switch(opcode){
             case BYTECODE_mov:

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "common.h"
+#include "vm.h"
+
 typedef enum{
     #define INSTRUCTION(name, length)   BYTECODE_##name,
     #include "instruction.h"
@@ -20,3 +23,11 @@ typedef enum{
     BYTECODE_xra_M,  // xra m
     BYTECODE_cmp_M  // cmp m
 } Bytecode;
+
+const char* bytecode_get_string(Bytecode code);
+// disassemble only one instruction
+void bytecode_disassemble(u8 *memory, u16 pointer);
+// continue disassembly until a HLT is found
+void bytecode_disassemble_chunk(u8 *memory, u16 pointer);  
+// disassemble instruction with context to the present state of the machine
+void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m);
