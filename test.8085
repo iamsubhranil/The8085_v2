@@ -1,0 +1,10 @@
+mvi h, 10h
+mvi l, 10h
+mvi m, 0f2h
+go: ldax h
+cpi 0ffh
+jz stop
+inr a
+stax h
+jmp go
+stop: hlt
