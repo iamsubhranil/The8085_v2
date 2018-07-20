@@ -158,78 +158,17 @@ CompilationStatus patch_labels(){
 }
 
 static Bytecode bytecodes[] = {
-    HLT,    // colon
-    HLT,    // comma
-    HLT,    // identifer
-    HLT,    // number
+    BYTECODE_hlt,    // colon
+    BYTECODE_hlt,    // comma
+    BYTECODE_hlt,    // identifer
+    BYTECODE_hlt,    // number
 
-    /* Data transfer instructions */
-    MVI,    // mvi b, 47h
-    MOV,    // mov b, a (between two registers)
-    LXI,    // lxi b, 2050h
-    LDA,    // lda 2050h
-    STA,    // sta 2070h
-    LDAX,   // ldax b
-    STAX,   // stax b
-    OUT,    // out 01h
-    IN,     // in 07h
+    #define INSTRUCTION(name, length)   BYTECODE_##name,
+    #include "instruction.h"
+    #undef INSTRUCTION
 
-    /* Arithmetic instructions */
-    ADD,    // add b 
-    ADI,    // addi 37h
-    SUB,    // sub c
-    SUI,    // sui 7fh
-    INR,    // inr d
-    INX,    // inx h
-    DCR,    // dcr c
-    DCX,    // dcx b
-
-    /* Logic and bit manipulation instructions */
-    ANA,    // ana b
-    ANI,    // ani 2fh
-    ORA,    // ora e
-    ORI,    // ori 3fh
-    XRA,    // xra c
-    XRI,    // xri 6ah
-    CMP,    // cmp b
-    CPI,    // cpi 4fh
-    CMA,    // cma
-    RLC,    // rlc
-    RAL,    // ral
-    RRC,    // rrc
-    RAR,    // rar
-
-    /* Braching instructions */
-    JMP,    // jmp 2050h
-    JC,     // jc 2025h
-    JNC,    // jnc 2030h
-    JZ,     // jz 2080h
-    JNZ,    // jnz 2070h
-    JP,     // jp 2323h
-    JM,     // jm 3245h
-
-    CALL,   // call 2075h
-    CC,     // cc 3423h
-    CNC,    // cnc 4433h
-    CZ,     // cz 4343h
-    CNZ,    // cnz 1923h
-    CP,     // cp 3211h
-    CM,     // cm 1292h
-    
-    RET,    // ret
-    RC,     // rc
-    RNC,    // rnc
-    RZ,     // rz
-    RNZ,    // rnz
-    RP,     // rp
-    RM,     // rm
-
-    /* Machine control instructions */
-    HLT,
-    NOP,
-
-    HLT,    // error
-    HLT     // eof
+    BYTECODE_hlt,    // error
+    BYTECODE_hlt     // eof
 };
 
 static CompilationStatus compile_hex16_operand(Token t){
@@ -273,6 +212,32 @@ static CompilationStatus compile_reg(Token t){
     return COMPILE_OK;
 } 
 
+static Bytecode get_m_version_of(Bytecode code){
+    switch(code){
+        case BYTECODE_mvi:
+            return BYTECODE_mvi_M;
+        case BYTECODE_mov:
+            return BYTECODE_mov_M;
+        case BYTECODE_dcr:
+            return BYTECODE_dcr_M;
+        case BYTECODE_inr:
+            return BYTECODE_inr_M;
+        case BYTECODE_add:
+            return BYTECODE_add_M;
+        case BYTECODE_sub:
+            return BYTECODE_sub_M;
+        case BYTECODE_ana:
+            return BYTECODE_ana_M;
+        case BYTECODE_xra:
+            return BYTECODE_xra_M;
+        case BYTECODE_cmp:
+            return BYTECODE_cmp_M;
+        default:
+            perr("[Internal Error] M version required for code %d", code);
+            return BYTECODE_hlt;
+    }
+}
+
 static CompilationStatus compile_reg_or_mem(Token t){
     Bytecode code = bytecodes[t.type];
 
@@ -281,7 +246,7 @@ static CompilationStatus compile_reg_or_mem(Token t){
         compile_reg(presentToken);
     }
     else if(ismem(presentToken)){
-        write_byte(code + 1); // the +1th bytecode is usually the _M version
+        write_byte(get_m_version_of(code)); // the +1th bytecode is usually the _M version
     }
     else{
         perr("[line %d] Expected register or memory [received %.*s]!", presentToken.line, 
@@ -308,6 +273,20 @@ static bool issp(Token t){
     return t.length == 2 && t.start[0] == 's' && t.start[1] == 'p';
 }
 
+static Bytecode get_sp_version_of(Bytecode code){
+    switch(code){
+        case BYTECODE_lxi:
+            return BYTECODE_lxi_SP;
+        case BYTECODE_inx:
+            return BYTECODE_inx_SP;
+        case BYTECODE_dcx:
+            return BYTECODE_dcx_SP;
+        default:
+            perr("[Internal error] SP version required for code %d", code);
+            return BYTECODE_hlt;
+    }
+}
+
 static CompilationStatus compile_regpair_or_sp(Token t){
     Bytecode code = bytecodes[t.type];
 
@@ -316,7 +295,7 @@ static CompilationStatus compile_regpair_or_sp(Token t){
         compile_reg(presentToken);
     }
     else if(issp(presentToken)){
-        write_byte(code + 1); // the +1th bytecode is usually the _SP version
+        write_byte(get_sp_version_of(code)); // the +1th bytecode is usually the _SP version
     }
     else{
         perr("[line %d] Expected register pair or stack pointer [received %.*s]!", presentToken.line, 
@@ -363,7 +342,7 @@ static CompilationStatus compile_mov(Token t){
             return COMPILE_OK;
         }
         else if(ismem(presentToken)){
-            write_byte(MOV_R);
+            write_byte(BYTECODE_mov_R);
             compile_reg(prevreg);
             return COMPILE_OK;
         }
@@ -377,7 +356,7 @@ static CompilationStatus compile_mov(Token t){
         if(!consume(TOKEN_COMMA, "Expected comma between operands"))
             return PARSE_ERROR;
         if(isreg(advance())){
-            write_byte(MOV_M);
+            write_byte(BYTECODE_mov_M);
             compile_reg(presentToken);
             return COMPILE_OK;
         }
@@ -396,74 +375,79 @@ static CompilationStatus compile_mov(Token t){
 
 static compilerFn compilationTable[] = {
     // Single-character tokens.
-    unexpected_token,   // TOKEN_COLON
-    unexpected_token,   // TOKEN_COMMA
+    unexpected_token,           // TOKEN_COLON
+    unexpected_token,           // TOKEN_COMMA
 
     // Literals.
-    compile_label,      // TOKEN_IDENTIFIER
-    unexpected_token,   // TOKEN_NUMBER
+    compile_label,              // TOKEN_IDENTIFIER
+    unexpected_token,           // TOKEN_NUMBER
 
     // Keywords.
-    compile_mvi,                // TOKEN_MVI
-    compile_mov,                // TOKEN_MOV 
-    compile_lxi,                // TOKEN_LXI
-    compile_hex16_operand,        // TOKEN_LDA
-    compile_hex16_operand,        // TOKEN_STA
-    compile_regpair,            // TOKEN_LDAX
-    compile_regpair,            // TOKEN_STAX
-    
-    compile_no_operand,         // TOKEN_OUT
-    compile_no_operand,         // TOKEN_IN
-
     compile_reg_or_mem,         // TOKEN_ADD
-    compile_hex8_operand,        // TOKEN_ADDI
-    compile_reg_or_mem,         // TOKEN_SUB
-    compile_hex8_operand,        // TOKEN_SUI
-    compile_reg_or_mem,         // TOKEN_INR
-    compile_regpair_or_sp,      // TOKEN_INX
+    compile_hex8_operand,       // TOKEN_ADDI
+    compile_reg_or_mem,         // TOKEN_ANA
+    compile_hex8_operand,       // TOKEN_ANI
+    
+    compile_hex16_operand,      // TOKEN_CALL
+    compile_hex16_operand,      // TOKEN_CC
+    compile_hex16_operand,      // TOKEN_CM
+    compile_no_operand,         // TOKEN_CMA
+    compile_reg_or_mem,         // TOKEN_CMP
+    compile_hex16_operand,      // TOKEN_CNC
+    compile_hex16_operand,      // TOKEN_CNZ
+    compile_hex16_operand,      // TOKEN_CP
+    compile_hex8_operand,       // TOKEN_CPI
+    compile_hex16_operand,      // TOKEN_CZ
+
     compile_reg_or_mem,         // TOKEN_DCR
     compile_regpair_or_sp,      // TOKEN_DCX
 
-    compile_reg_or_mem,         // TOKEN_ANA
-    compile_hex8_operand,        // TOKEN_ANI
+    compile_no_operand,         // TOKEN_HLT
+    
+    compile_no_operand,         // TOKEN_IN
+    compile_reg_or_mem,         // TOKEN_INR
+    compile_regpair_or_sp,      // TOKEN_INX
+ 
+    compile_hex16_operand,      // TOKEN_JC
+    compile_hex16_operand,      // TOKEN_JM
+    compile_hex16_operand,      // TOKEN_JMP
+    compile_hex16_operand,      // TOKEN_JNC
+    compile_hex16_operand,      // TOKEN_JNZ
+    compile_hex16_operand,      // TOKEN_JP
+    compile_hex16_operand,      // TOKEN_JZ   
+    
+    compile_hex16_operand,      // TOKEN_LDA
+    compile_regpair,            // TOKEN_LDAX
+    compile_lxi,                // TOKEN_LXI
+    
+    compile_mov,                // TOKEN_MOV
+    compile_mvi,                // TOKEN_MVI
+    
+    compile_no_operand,         // TOKEN_NOP 
+ 
     compile_reg_or_mem,         // TOKEN_ORA
-    compile_hex8_operand,        // TOKEN_ORI
-    compile_reg_or_mem,         // TOKEN_XRA
-    compile_hex8_operand,        // TOKEN_XRI
-    compile_reg_or_mem,         // TOKEN_CMP
-    compile_hex8_operand,        // TOKEN_CPI
-    compile_no_operand,         // TOKEN_CMA
-    compile_no_operand,         // TOKEN_RLC
+    compile_hex8_operand,       // TOKEN_ORI
+    compile_no_operand,         // TOKEN_OUT   
+    
     compile_no_operand,         // TOKEN_RAL
-    compile_no_operand,         // TOKEN_RRC
     compile_no_operand,         // TOKEN_RAR
-
-    compile_hex16_operand,        // TOKEN_JMP
-    compile_hex16_operand,         // TOKEN_JC
-    compile_hex16_operand,        // TOKEN_JNC
-    compile_hex16_operand,         // TOKEN_JZ
-    compile_hex16_operand,        // TOKEN_JNZ
-    compile_hex16_operand,         // TOKEN_JP
-    compile_hex16_operand,         // TOKEN_JM
-    
-    compile_hex16_operand,       // TOKEN_CALL
-    compile_hex16_operand,         // TOKEN_CC
-    compile_hex16_operand,        // TOKEN_CNC
-    compile_hex16_operand,         // TOKEN_CZ
-    compile_hex16_operand,        // TOKEN_CNZ
-    compile_hex16_operand,         // TOKEN_CP
-    compile_hex16_operand,         // TOKEN_CM
-    
-    compile_no_operand,         // TOKEN_RET
     compile_no_operand,         // TOKEN_RC
+    compile_no_operand,         // TOKEN_RET
+    compile_no_operand,         // TOKEN_RLC
+    compile_no_operand,         // TOKEN_RM
     compile_no_operand,         // TOKEN_RNC
-    compile_no_operand,         // TOKEN_RZ
     compile_no_operand,         // TOKEN_RNZ
     compile_no_operand,         // TOKEN_RP
-    compile_no_operand,         // TOKEN_RM
+    compile_no_operand,         // TOKEN_RRC
+    compile_no_operand,         // TOKEN_RZ
+    
+    compile_hex16_operand,      // TOKEN_STA
+    compile_regpair,            // TOKEN_STAX
+    compile_reg_or_mem,         // TOKEN_SUB
+    compile_hex8_operand,       // TOKEN_SUI
 
-    compile_no_operand,         // TOKEN_HLT
-    compile_no_operand,         // TOKEN_NOP
+    compile_reg_or_mem,         // TOKEN_XRA
+    compile_hex8_operand,       // TOKEN_XRI
 
     // Special purpose tokens.
     unexpected_token,           // TOKEN_ERROR

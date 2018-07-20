@@ -106,99 +106,99 @@ void run(Machine *m, u8 *memory){
         break;
 
     Bytecode opcode;
-    while((opcode = (Bytecode)NEXT_BYTE()) != HLT){
+    while((opcode = (Bytecode)NEXT_BYTE()) != BYTECODE_hlt){
         print_machine(m);
         switch(opcode){
-            case MOV:
+            case BYTECODE_mov:
                 {
                     u8 to = NEXT_BYTE();
                     u8 from = NEXT_BYTE();
                     m->registers[to] = m->registers[from];
                     break;
                 }
-            case MOV_R:
+            case BYTECODE_mov_R:
                 {
                     u8 to = NEXT_BYTE();
                     u16 from = FROM_HL();
                     m->registers[to] = memory[from];
                     break;
                 }
-            case MOV_M:
+            case BYTECODE_mov_M:
                 {
                     u8 from = NEXT_BYTE();
                     u16 to = FROM_HL();
                     memory[to] = m->registers[from];
                     break;
                 }
-            case MVI:
+            case BYTECODE_mvi:
                 {
                     u8 to = NEXT_BYTE();
                     u8 data = NEXT_BYTE();
                     m->registers[to] = data;
                     break;
                 }
-            case MVI_M:
+            case BYTECODE_mvi_M:
                 {
                     u16 to = FROM_HL();
                     memory[to] = NEXT_BYTE();
                     break;
                 }
-            case LXI:
+            case BYTECODE_lxi:
                 {
                     u8 first = NEXT_BYTE();
                     m->registers[first + 1] = NEXT_BYTE();
                     m->registers[first] = NEXT_BYTE();
                     break;
                 }
-            case LXI_SP:
+            case BYTECODE_lxi_SP:
                 {
                     m->sp = NEXT_DWORD();
                     break;
                 }
-            case LDA:
+            case BYTECODE_lda:
                 {
                     m->registers[REG_A] = memory[NEXT_DWORD()];
                     break;
                 }
-            case LDAX:
+            case BYTECODE_ldax:
                 {
                     u8 first = NEXT_BYTE();
                     u16 from = FROM_PAIR(first, first + 1);
                     m->registers[REG_A] = memory[from];
                     break;
                 }
-            case STA:
+            case BYTECODE_sta:
                 {
                     u16 to = NEXT_DWORD();
                     memory[to] = m->registers[REG_A];
                     break;
                 }
-            case STAX:
+            case BYTECODE_stax:
                 {
                     u8 first = NEXT_BYTE();
                     u16 to = FROM_PAIR(first, first + 1);
                     memory[to] = m->registers[REG_A];
                     break;
                 }
-            case ADD:
+            case BYTECODE_add:
                 {
                     u8 with = m->registers[NEXT_BYTE()];
                     ADD();
                     break;
                 }
-            case ADD_M:
+            case BYTECODE_add_M:
                 {
                     u8 with = memory[FROM_HL()];
                     ADD();
                     break;
                 }
-            case ADI:
+            case BYTECODE_addi:
                 {
                     u8 with = NEXT_BYTE();
                     ADD();
                     break;
                 }
-            case INR:
+            case BYTECODE_inr:
                 {
                     u8 reg = NEXT_BYTE();
                     u16 res = m->registers[reg] + 1;
@@ -207,7 +207,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[reg] = res & 0xff;
                     break;
                 }
-            case INR_M:
+            case BYTECODE_inr_M:
                 {
                     u16 res = memory[FROM_HL()] + 1;
                     INIT_FLG_S(res);
@@ -215,7 +215,7 @@ void run(Machine *m, u8 *memory){
                     memory[FROM_HL()] = res & 0xff;
                     break;
                 }
-            case INX:
+            case BYTECODE_inx:
                 {
                     u8 first = NEXT_BYTE();
                     u16 res = FROM_PAIR(first, first + 1) + 1;
@@ -223,30 +223,30 @@ void run(Machine *m, u8 *memory){
                     m->registers[first + 1] = res & 0x00ff;
                     break;
                 }
-            case INX_SP:
+            case BYTECODE_inx_SP:
                 {
                     m->sp++;
                     break;
                 }
-            case SUB:
+            case BYTECODE_sub:
                 {
                     u8 by = m->registers[NEXT_BYTE()];
                     SUB();
                     break;
                 }
-            case SUB_M:
+            case BYTECODE_sub_M:
                 {
                     u8 by = memory[FROM_HL()];
                     SUB();
                     break;
                 }
-            case SUI:
+            case BYTECODE_sui:
                 {
                     u8 by = NEXT_BYTE();
                     SUB();
                     break;
                 }
-            case DCR:
+            case BYTECODE_dcr:
                 {
                     u8 reg = NEXT_BYTE();
                     u16 res = m->registers[reg] - 1;
@@ -255,7 +255,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[reg] = res & 0xff;
                     break;
                 }
-            case DCR_M:
+            case BYTECODE_dcr_M:
                 {
                     u16 res = memory[FROM_HL()] - 1;
                     INIT_FLG_S(res);
@@ -263,7 +263,7 @@ void run(Machine *m, u8 *memory){
                     memory[FROM_HL()] = res & 0xff;
                     break;
                 }
-            case DCX:
+            case BYTECODE_dcx:
                 {
                     u8 first = NEXT_BYTE();
                     u16 res = FROM_PAIR(first, first + 1) - 1;
@@ -271,74 +271,74 @@ void run(Machine *m, u8 *memory){
                     m->registers[first + 1] = res & 0x00ff;
                     break;
                 }
-            case DCX_SP:
+            case BYTECODE_dcx_SP:
                 {
                     m->sp--;
                     break;
                 }
-            case ANA:
+            case BYTECODE_ana:
                 {
                     u8 with = m->registers[NEXT_BYTE()];
                     LOGICAL_NOT_CMA(&);
                     SET_FLAG(FLG_A);
                     break;
                 }
-            case ANA_M:
+            case BYTECODE_ana_M:
                 {
                     u8 with = memory[FROM_HL()];
                     LOGICAL_NOT_CMA(&);
                     SET_FLAG(FLG_A);
                     break;
                 }
-            case ANI:
+            case BYTECODE_ani:
                 {
                     u8 with = NEXT_BYTE();
                     LOGICAL_NOT_CMA(&);
                     SET_FLAG(FLG_A);
                     break;
                 }
-            case ORA:
+            case BYTECODE_ora:
                 {
                     u8 with = m->registers[NEXT_BYTE()];
                     LOGICAL_NOT_CMA(|);
                     break;
                 }
-            case ORA_M:
+            case BYTECODE_ora_M:
                 {
                     u8 with = memory[FROM_HL()];
                     LOGICAL_NOT_CMA(|);
                     break;
                 }
-            case ORI:
+            case BYTECODE_ori:
                 {
                     u8 with = NEXT_BYTE();
                     LOGICAL_NOT_CMA(|);
                     break;
                 }
-            case XRA:
+            case BYTECODE_xra:
                 {
                     u8 with = m->registers[NEXT_BYTE()];
                     LOGICAL_NOT_CMA(^);
                     break;
                 }
-            case XRA_M:
+            case BYTECODE_xra_M:
                 {
                     u8 with = m->registers[NEXT_BYTE()];
                     LOGICAL_NOT_CMA(^);
                     break;
                 }
-            case XRI:
+            case BYTECODE_xri:
                 {
                     u8 with = NEXT_BYTE();
                     LOGICAL_NOT_CMA(^);
                     break;
                 }
-            case CMA:
+            case BYTECODE_cma:
                 {
                     m->registers[REG_A] = ~m->registers[REG_A];
                     break;
                 }
-            case CMP:
+            case BYTECODE_cmp:
                 {
                     u8 bak = m->registers[REG_A];
                     u8 by = m->registers[NEXT_BYTE()] + 1;
@@ -346,7 +346,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] = bak;
                     break;
                 }
-            case CMP_M:
+            case BYTECODE_cmp_M:
                 {
                     u8 bak = m->registers[REG_A];
                     u8 by = memory[FROM_HL()] + 1;
@@ -354,7 +354,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] = bak;
                     break;
                 }
-            case CPI:
+            case BYTECODE_cpi:
                 {
                     u8 bak = m->registers[REG_A];
                     u8 by = NEXT_BYTE();
@@ -362,7 +362,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] = bak;
                     break;
                 }
-            case RLC:
+            case BYTECODE_rlc:
                 {
                     u8 d7 = m->registers[REG_A] >> 7;
                     m->registers[REG_FL] |= (d7 << FLG_C); // Set/reset the carry
@@ -370,7 +370,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] |= d7;
                     break;
                 }
-            case RAL:
+            case BYTECODE_ral:
                 {
                     u8 d7 = m->registers[REG_A] >> 7;
                     u8 d0 = GET_FLAG(FLG_C);
@@ -379,7 +379,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] |= d0;
                     break;
                 }
-            case RRC:
+            case BYTECODE_rrc:
                 {
                     u8 d0 = m->registers[REG_A] & 1;
                     m->registers[REG_FL] |= (d0 << FLG_C); // Set/reset the carry
@@ -387,7 +387,7 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] |= (d0 << 7);
                     break;
                 }
-            case RAR:
+            case BYTECODE_rar:
                 {
                     u8 d0 = m->registers[REG_A] & 1;
                     u8 d7 = GET_FLAG(FLG_C);
@@ -396,105 +396,105 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] |= (d7 << 7);
                     break;
                 }
-            case JMP:
+            case BYTECODE_jmp:
                 {
                     JMP_ON(1);
                 }
-            case JC:
+            case BYTECODE_jc:
                 {
                     JMP_ON(GET_FLAG(FLG_C));
                 }
-            case JNC:
+            case BYTECODE_jnc:
                 {
                     JMP_ON(!GET_FLAG(FLG_C));
                 }
-            case JZ:
+            case BYTECODE_jz:
                 {
                     JMP_ON(GET_FLAG(FLG_Z));
                 }
-            case JNZ:
+            case BYTECODE_jnz:
                 {
                     JMP_ON(!GET_FLAG(FLG_Z));
                 }
-            case JP:
+            case BYTECODE_jp:
                 {
                     JMP_ON(!GET_FLAG(FLG_S));
                 }
-            case JM:
+            case BYTECODE_jm:
                 {
                     JMP_ON(GET_FLAG(FLG_S));
                 }
-            case CALL:
+            case BYTECODE_call:
                 {
                     CALL_ON(1);
                 }
-            case CC:
+            case BYTECODE_cc:
                 {
                     CALL_ON(GET_FLAG(FLG_C));
                 }
-            case CNC:
+            case BYTECODE_cnc:
                 {
                     CALL_ON(!GET_FLAG(FLG_C));
                 }
-            case CZ:
+            case BYTECODE_cz:
                 {
                     CALL_ON(GET_FLAG(FLG_Z));
                 }
-            case CNZ:
+            case BYTECODE_cnz:
                 {
                     CALL_ON(!GET_FLAG(FLG_Z));
                 }
-            case CM:
+            case BYTECODE_cm:
                 {
                     CALL_ON(GET_FLAG(FLG_S));
                 }
-            case CP:
+            case BYTECODE_cp:
                 {
                     CALL_ON(!GET_FLAG(FLG_S));
                 }
-            case RET:
+            case BYTECODE_ret:
                 {
                     RET_ON(1);
                 }
-            case RC:
+            case BYTECODE_rc:
                 {
                     RET_ON(GET_FLAG(FLG_C));
                 }
-            case RNC:
+            case BYTECODE_rnc:
                 {
                     RET_ON(!GET_FLAG(FLG_C));
                 }
-            case RZ:
+            case BYTECODE_rz:
                 {
                     RET_ON(GET_FLAG(FLG_Z));
                 }
-            case RNZ:
+            case BYTECODE_rnz:
                 {
                     RET_ON(!GET_FLAG(FLG_Z));
                 }
-            case RM:
+            case BYTECODE_rm:
                 {
                     RET_ON(GET_FLAG(FLG_S));
                 }
-            case RP:
+            case BYTECODE_rp:
                 {
                     RET_ON(!GET_FLAG(FLG_S));
                 }
-            case IN:
+            case BYTECODE_in:
                 {
                     fflush(stdin);
                     m->registers[REG_A] = getchar();
                     break;
                 }
-            case OUT:
+            case BYTECODE_out:
                 {
                     printf("\n0x%x\n", m->registers[REG_A]);
                     fflush(stdout);
                     break;
                 }
-            case HLT:
+            case BYTECODE_hlt:
                 return;
-            case NOP:
+            case BYTECODE_nop:
                 break;
             default:
                 break;
