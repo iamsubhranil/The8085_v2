@@ -23,6 +23,12 @@ int main(){
                             "cpi 19h\n"
                             "hlt\n";
 
+    pinfo("Source");
+    pinfo("======\n");
+    printf("%s", source);
+
+    pinfo("Compiling source");
+    pinfo("================");
     CompilationStatus stat = compile(source, &memory[0], 1 << 15, p); 
 
     if(stat != COMPILE_OK){
@@ -30,9 +36,12 @@ int main(){
         return 1;
     }
 
+    pinfo("Disassembling compiled chunk");
+    pinfo("============================\n");
     bytecode_disassemble_chunk(memory, 0);
 
+    printf("\n\n");
+    pinfo("Running chunk");
+    pinfo("=============\n");
     run(&m, &memory[0]);
-
-    print_machine(&m);
 }

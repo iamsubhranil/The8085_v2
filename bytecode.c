@@ -8,20 +8,20 @@ static const char* bytecode_strings[] = {
     #include "instruction.h"
     #undef INSTRUCTION
 
-    "lxi sp, ",
-    "dcx sp",
-    "inx sp",
-    "mov_r",
-    "mvi m",
-    "mov m",
-    "dcr m",
-    "inr m",
-    "sub m",
-    "add m",
-    "ana m",
-    "ora m",
-    "xra m",
-    "cmp m"
+    "lxi   sp",
+    "dcx   sp",
+    "inx   sp",
+    "mov_r   ",
+    "mvi   m",
+    "mov   m",
+    "dcr   m",
+    "inr   m",
+    "sub   m",
+    "add   m",
+    "ana   m",
+    "ora   m",
+    "xra   m",
+    "cmp   m"
 };
 
 const char* bytecode_get_string(Bytecode code){
@@ -184,15 +184,53 @@ static disassembleFn disassembleTable[] = {
 
 void bytecode_disassemble(u8 *memory, u16 pointer){
     pred("\n%04x:\t", pointer);
-    pblue("%s", bytecode_strings[memory[pointer]]);
+    pblue("%-5s", bytecode_strings[memory[pointer]]);
     pointer++;
     disassembleTable[memory[pointer - 1]](memory, &pointer);
+}
+
+void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
+    pred("\n%04x:\t", pointer);
+    pblue("%-5s", bytecode_strings[memory[pointer]]);
+    pointer++;
+    Bytecode code = (Bytecode)memory[pointer - 1];
+    disassembleTable[memory[pointer - 1]](memory, &pointer);
+    
+    #define FROM_PAIR(x, y)     (((u16)m->registers[x] << 8) | m->registers[y])
+    #define FROM_HL()           FROM_PAIR(5, 6)
+    #define GET_PAIR(num)       (num == REG_B ? "BC" : num == REG_D ? "DE" : "HL")
+
+    switch(code){
+        case BYTECODE_mov_R:
+        case BYTECODE_mov_M:
+        case BYTECODE_mvi_M:
+        case BYTECODE_add_M:
+        case BYTECODE_inr_M:
+        case BYTECODE_sub_M:
+        case BYTECODE_dcr_M:
+        case BYTECODE_ana_M:
+        case BYTECODE_ora_M:
+        case BYTECODE_xra_M:
+        case BYTECODE_cmp_M:
+            printf("\t(HL : 0x%x, memory[0x%x] : 0x%x)", FROM_HL(), FROM_HL(), memory[FROM_HL()]);
+            break;
+        case BYTECODE_ldax:
+        case BYTECODE_stax:
+            {
+                u16 addr = FROM_PAIR(memory[pointer - 1], memory[pointer - 1] + 1);
+                printf("\t(%s : 0x%x, memory[0x%x] : 0x%x)", GET_PAIR(memory[pointer - 1]), 
+                        addr, addr, memory[addr]);
+                break;
+            }
+        default:
+            break;
+    }
 }
 
 void bytecode_disassemble_chunk(u8 *memory, u16 pointer){
     while(1){
         pred("\n%04x:\t", pointer);
-        pblue("%s", bytecode_strings[memory[pointer]]);
+        pblue("%-5s", bytecode_strings[memory[pointer]]);
         if(memory[pointer] == BYTECODE_hlt)
             break;
         pointer++;
