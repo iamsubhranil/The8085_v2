@@ -25,7 +25,8 @@ static const char* bytecode_strings[] = {
     "adc   m",
     "dad   sp",
     "pop   psw",
-    "push  psw"
+    "push  psw",
+    "sbb   m",
 };
 
 const char* bytecode_get_string(Bytecode code){
@@ -171,10 +172,11 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // TOKEN_RP
     dis_no_operand,         // TOKEN_RRC
     dis_no_operand,         // TOKEN_RZ
-    
+   
+    dis_reg,                // TOKEN_SBB
     dis_hex16_operand,      // TOKEN_STA
-    dis_reg,            // TOKEN_STAX
-    dis_reg,         // TOKEN_SUB
+    dis_reg,                // TOKEN_STAX
+    dis_reg,                // TOKEN_SUB
     dis_hex8_operand,       // TOKEN_SUI
 
     dis_reg,         // TOKEN_XRA
@@ -198,6 +200,7 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // dad sp
     dis_no_operand,         // pop psw
     dis_no_operand,         // push psw
+    dis_no_operand,         // sbb m
 };
 
 void bytecode_disassemble(u8 *memory, u16 pointer){
@@ -231,6 +234,7 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
         case BYTECODE_xra_M:
         case BYTECODE_cmp_M:
         case BYTECODE_adc_M:
+        case BYTECODE_sbb_M:
             printf("\t(HL : 0x%x, memory[0x%x] : 0x%x)", FROM_HL(), FROM_HL(), memory[FROM_HL()]);
             break;
         case BYTECODE_ldax:

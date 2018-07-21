@@ -254,6 +254,8 @@ static Bytecode get_m_version_of(Bytecode code){
             return BYTECODE_cmp_M;
         case BYTECODE_adc:
             return BYTECODE_adc_M;
+        case BYTECODE_sbb:
+            return BYTECODE_sbb_M;
         default:
             perr("[Internal Error] M version required for code %d", code);
             return BYTECODE_hlt;
@@ -509,7 +511,8 @@ static compilerFn compilationTable[] = {
     compile_no_operand,         // TOKEN_RP
     compile_no_operand,         // TOKEN_RRC
     compile_no_operand,         // TOKEN_RZ
-    
+   
+    compile_reg_or_mem,         // TOKEN_SBB
     compile_hex16_operand,      // TOKEN_STA
     compile_regpair,            // TOKEN_STAX
     compile_reg_or_mem,         // TOKEN_SUB

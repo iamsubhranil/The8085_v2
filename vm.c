@@ -266,6 +266,18 @@ void run(Machine *m, u8 *memory){
                     m->sp++;
                     break;
                 }
+            case BYTECODE_sbb:
+                {
+                    u8 by = m->registers[NEXT_BYTE()] + GET_FLAG(FLG_C);
+                    SUB();
+                    break;
+                }
+            case BYTECODE_sbb_M:
+                {
+                    u8 by = memory[FROM_HL()] + GET_FLAG(FLG_C);
+                    SUB();
+                    break;
+                }
             case BYTECODE_sub:
                 {
                     u8 by = m->registers[NEXT_BYTE()];

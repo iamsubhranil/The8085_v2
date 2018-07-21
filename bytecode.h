@@ -25,7 +25,8 @@ typedef enum{
     BYTECODE_adc_M,  // adc m
     BYTECODE_dad_SP, // dad sp
     BYTECODE_pop_PSW,// pop psw
-    BYTECODE_push_PSW,
+    BYTECODE_push_PSW, // push psw
+    BYTECODE_sbb_M,  // sbb m
 } Bytecode;
 
 const char* bytecode_get_string(Bytecode code);
