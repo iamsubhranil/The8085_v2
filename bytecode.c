@@ -153,7 +153,9 @@ static disassembleFn disassembleTable[] = {
     dis_reg,         // TOKEN_ORA
     dis_hex8_operand,       // TOKEN_ORI
     dis_no_operand,         // TOKEN_OUT   
-    
+   
+    dis_no_operand,         // TOKEN_PCHL
+
     dis_no_operand,         // TOKEN_RAL
     dis_no_operand,         // TOKEN_RAR
     dis_no_operand,         // TOKEN_RC

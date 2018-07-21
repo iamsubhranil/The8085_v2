@@ -1,0 +1,6 @@
+start: 
+lxi h, halt
+pchl
+jmp start
+halt:
+hlt

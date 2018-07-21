@@ -562,6 +562,12 @@ void run(Machine *m, u8 *memory){
                     fflush(stdout);
                     break;
                 }
+            case BYTECODE_pchl:
+                {
+                    m->pc = m->registers[REG_L];
+                    m->pc |= (m->registers[REG_H] << 8);
+                    break;
+                }
             case BYTECODE_hlt:
                 return;
             case BYTECODE_nop:

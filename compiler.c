@@ -458,7 +458,9 @@ static compilerFn compilationTable[] = {
     compile_reg_or_mem,         // TOKEN_ORA
     compile_hex8_operand,       // TOKEN_ORI
     compile_no_operand,         // TOKEN_OUT   
-    
+   
+    compile_no_operand,         // TOKEN_PCHL
+
     compile_no_operand,         // TOKEN_RAL
     compile_no_operand,         // TOKEN_RAR
     compile_no_operand,         // TOKEN_RC
