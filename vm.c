@@ -585,6 +585,21 @@ void run(Machine *m, u8 *memory){
                     m->sp++;
                     break;
                 }
+            case BYTECODE_push:
+                {
+                    u8 reg = NEXT_BYTE();
+                    memory[m->sp - 1] = m->registers[reg];
+                    memory[m->sp - 2] = m->registers[reg + 1];
+                    m->sp -= 2;
+                    break;
+                }
+            case BYTECODE_push_PSW:
+                {
+                    memory[m->sp - 1] = m->registers[REG_A];
+                    memory[m->sp - 2] = m->registers[REG_FL];
+                    m->sp -= 2;
+                    break;
+                }
             case BYTECODE_hlt:
                 return;
             case BYTECODE_nop:

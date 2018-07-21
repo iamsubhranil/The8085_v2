@@ -406,6 +406,8 @@ static Bytecode get_psw_version_of(Bytecode code){
     switch(code){
         case BYTECODE_pop:
             return BYTECODE_pop_PSW;
+        case BYTECODE_push:
+            return BYTECODE_push_PSW;
         default:
             perr("[Internal Error] PSW version required for code %d", code);
             return BYTECODE_hlt;
@@ -494,6 +496,7 @@ static compilerFn compilationTable[] = {
    
     compile_no_operand,         // TOKEN_PCHL
     compile_regpair_or_psw,     // TOKEN_POP
+    compile_regpair_or_psw,     // TOKEN_PUSH
 
     compile_no_operand,         // TOKEN_RAL
     compile_no_operand,         // TOKEN_RAR
