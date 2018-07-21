@@ -183,7 +183,8 @@ static disassembleFn disassembleTable[] = {
     dis_reg,                // TOKEN_SUB
     dis_hex8_operand,       // TOKEN_SUI
 
-    dis_reg,         // TOKEN_XRA
+    dis_no_operand,         // TOKEN_XCHG
+    dis_reg,                // TOKEN_XRA
     dis_hex8_operand,       // TOKEN_XRI
     
     dis_hex16_operand,      // lxi_SP

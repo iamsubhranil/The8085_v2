@@ -643,6 +643,16 @@ void run(Machine *m, u8 *memory){
                     SET_FLAG(FLG_C);
                     break;
                 }
+            case BYTECODE_xchg:
+                {
+                    u8 td = m->registers[REG_D];
+                    u8 te = m->registers[REG_E];
+                    m->registers[REG_D] = m->registers[REG_H];
+                    m->registers[REG_E] = m->registers[REG_L];
+                    m->registers[REG_H] = td;
+                    m->registers[REG_L] = te;
+                    break;
+                }
             case BYTECODE_hlt:
                 return;
             case BYTECODE_nop:
