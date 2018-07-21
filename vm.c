@@ -216,7 +216,7 @@ void run(Machine *m, u8 *memory){
                     ADD();
                     break;
                 }
-            case BYTECODE_addi:
+            case BYTECODE_adi:
                 {
                     u8 with = NEXT_BYTE();
                     ADD();
@@ -268,6 +268,17 @@ void run(Machine *m, u8 *memory){
                 {
                     u8 by = NEXT_BYTE();
                     SUB();
+                    break;
+                }
+            case BYTECODE_daa:
+                {
+                    u8 low = m->registers[REG_A] & 0x0f, high = m->registers[REG_A] & 0xf0;
+                    u8 with = 0;
+                    if(low > 9 || GET_FLAG(FLG_A))
+                        with |= 0x06;
+                    if(high > 9 || GET_FLAG(FLG_C))
+                        with |= 0x60;
+                    ADD();
                     break;
                 }
             case BYTECODE_dcr:

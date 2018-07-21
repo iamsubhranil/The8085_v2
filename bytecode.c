@@ -120,6 +120,7 @@ static disassembleFn disassembleTable[] = {
     dis_hex8_operand,       // TOKEN_CPI
     dis_hex16_operand,      // TOKEN_CZ
 
+    dis_no_operand,         // TOKEN_DAA
     dis_reg,         // TOKEN_DCR
     dis_reg,      // TOKEN_DCX
 

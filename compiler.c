@@ -408,7 +408,7 @@ static compilerFn compilationTable[] = {
     compile_hex8_operand,       // TOKEN_ACI
     compile_reg_or_mem,         // TOKEN_ADC
     compile_reg_or_mem,         // TOKEN_ADD
-    compile_hex8_operand,       // TOKEN_ADDI
+    compile_hex8_operand,       // TOKEN_ADI
     compile_reg_or_mem,         // TOKEN_ANA
     compile_hex8_operand,       // TOKEN_ANI
     
@@ -424,6 +424,7 @@ static compilerFn compilationTable[] = {
     compile_hex8_operand,       // TOKEN_CPI
     compile_hex16_operand,      // TOKEN_CZ
 
+    compile_no_operand,         // TOKEN_DAA
     compile_reg_or_mem,         // TOKEN_DCR
     compile_regpair_or_sp,      // TOKEN_DCX
 
