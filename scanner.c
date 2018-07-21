@@ -2,11 +2,13 @@
 #include <string.h>
 
 #include "common.h"
+#include "display.h"
 #include "scanner.h"
 
 typedef struct {
     const char* start;
     const char* current;
+    const char* source;
     int line;
 } Scanner;
 
@@ -15,6 +17,7 @@ Scanner scanner;
 void initScanner(const char* source) {
     scanner.start = source;
     scanner.current = source;
+    scanner.source = source;
     scanner.line = 1;
 }
 
@@ -60,18 +63,37 @@ static Token makeToken(TokenType type) {
     token.start = scanner.start;
     token.length = (int)(scanner.current - scanner.start);
     token.line = scanner.line;
-
+    token.chidx = scanner.start - scanner.source;
     return token;
 }
 
-static Token errorToken(const char* message) {
-    Token token;
-    token.type = TOKEN_ERROR;
-    token.start = message;
-    token.length = (int)strlen(message);
-    token.line = scanner.line;
+static Token errorToken() {
+    return makeToken(TOKEN_ERROR);
+}
 
-    return token;
+void token_highlight_source(Token t){
+    int line = 1;
+    const char *s = scanner.source;
+    while(line < t.line){
+        if(*s == '\n')
+            line++;
+        s++;
+        t.chidx--;
+    }
+    pgrn(ANSI_FONT_BOLD "\n[line %d] " ANSI_COLOR_RESET, line);
+    while(*s != '\n' && *s != '\0'){
+        putchar(*s);
+        s++;
+    }
+    printf("\n        %.*s", line > 9 ? 2 : line > 99 ? 3 : 1, " ");
+    while(t.chidx > 0){
+        printf(" ");
+        t.chidx--;
+    }
+    while(t.length > 0){
+        pylw(ANSI_FONT_BOLD "^" ANSI_COLOR_RESET);
+        t.length--;
+    }
 }
 
 static void skipWhitespace() {
@@ -194,5 +216,5 @@ Token scanToken() {
         case ',': return makeToken(TOKEN_COMMA);
     }
 
-    return errorToken("Unexpected character.");
+    return errorToken();
 }

@@ -10,13 +10,14 @@
 #define NUM_LABELS  32
 
 typedef struct{
+    Token t;
     const char *label;
     int length;
     u16 offset;
     u8 isDeclared;
 } Label;
 
-static Label labelTable[NUM_LABELS] = {{NULL, 0, 0, 0}};
+static Label labelTable[NUM_LABELS] = {{{},NULL, 0, 0, 0}};
 static siz labelPointer = 0;
 
 // Statically allocate pending labels too
@@ -47,8 +48,15 @@ u16 write_dword(u16 value){
 typedef CompilationStatus (*compilerFn)(Token t);
 
 CompilationStatus unexpected_token(Token t){
-    perr("Unexpected token at line %d : %.*s", t.line, t.length, t.start);
+    perr("Unexpected token at line %d!", t.line);
+    token_highlight_source(t);
     return PARSE_ERROR;
+}
+
+static void unexpected_operand(const char *expected, Bytecode code, Token t){
+    perr("Expected %s after " ANSI_FONT_BOLD "%s" ANSI_COLOR_RESET "!",
+            expected, bytecode_get_string(code));
+    token_highlight_source(t);
 }
 
 static Token presentToken = {}, previousToken = {};
@@ -63,15 +71,15 @@ static Token advance(){
 
 static bool consume(TokenType type, const char *message){
     if(advance().type != type){
-        perr("[line %d] %s [received %.*s]", presentToken.line,
-                message, presentToken.length, presentToken.start);
+        perr("%s", message);
+        token_highlight_source(presentToken);
         return false;
     }
     return true;
 }
 
 CompilationStatus compile_label(Token t){
-    if(!consume(TOKEN_COLON, "Expected ':'"))
+    if(!consume(TOKEN_COLON, "Expected ':' after label!"))
         return PARSE_ERROR;
     if(labelPointer == NUM_LABELS)
         return LABEL_FULL;
@@ -118,6 +126,7 @@ CompilationStatus compile_hex(u8 is16){
                 labelTable[labelPointer].length = t.length;
                 labelTable[labelPointer].offset = 0;
                 labelTable[labelPointer].isDeclared = 0;
+                labelTable[labelPointer].t = t;
                 labelPointer++;
             }
 
@@ -127,14 +136,16 @@ CompilationStatus compile_hex(u8 is16){
             (*offset) += 2;
             return COMPILE_OK;
         }
-        perr("[line %d] Expected %d bit number [received '%.*s']", t.line, (8*(is16 + 1)), t.length, t.start);
+        perr("Expected %d bit number!", (8*(is16 + 1)));
+        token_highlight_source(t);
         return PARSE_ERROR;
     }
-    if(!consume(TOKEN_IDENTIFIER, "Expected 'h'")){
+    if(!consume(TOKEN_IDENTIFIER, "Expected 'h' after number!")){
         return PARSE_ERROR;
     }
     if(presentToken.length != 1 || presentToken.start[0] != 'h'){
-        perr("[line %d] Expected 'h' after number!", presentToken.line);
+        perr("Expected 'h' after number!");
+        token_highlight_source(presentToken);
         return PARSE_ERROR;
     }
     
@@ -148,8 +159,8 @@ CompilationStatus compile_hex(u8 is16){
     u32 range = is16 ? 0xffff : 0x00ff;
     
     if(number > range){
-        perr("[line %d] Hex number out of range : %.*s [should be < 0x%x]", previousToken.line, 
-                previousToken.length, previousToken.start, range);
+        perr("Hex number out of range! [should be < 0x%x]", range);
+        token_highlight_source(previousToken);
         return PARSE_ERROR;
     }
     if(is16)
@@ -168,8 +179,8 @@ CompilationStatus patch_labels(){
             write_dword(labelTable[pending_labels[i].idx].offset);
         }
         else{
-            pwarn("Label used but not declared yet : '%.*s'", labelTable[pending_labels[i].idx].length,
-                    labelTable[pending_labels[i].idx].label);
+            pwarn("Label used but not declared yet!");
+            token_highlight_source(labelTable[pending_labels[i].idx].t);
             ret = LABELS_PENDING;
         }
     }
@@ -217,7 +228,8 @@ static bool ismem(Token t){
 
 static CompilationStatus compile_reg(Token t){
     if(!isreg(t)){
-        perr("[line %d] Expected register [received '%.*s']", t.line, t.length, t.start);
+        perr("Expected register!");
+        token_highlight_source(t);
         return PARSE_ERROR;
     }
     switch(t.start[0]){
@@ -258,6 +270,7 @@ static Bytecode get_m_version_of(Bytecode code){
             return BYTECODE_sbb_M;
         default:
             perr("[Internal Error] M version required for code %d", code);
+            token_highlight_source(presentToken);
             return BYTECODE_hlt;
     }
 }
@@ -273,8 +286,7 @@ static CompilationStatus compile_reg_or_mem(Token t){
         write_byte(get_m_version_of(code)); // get the m version
     }
     else{
-        perr("[line %d] Expected register or memory [received %.*s]!", presentToken.line, 
-                presentToken.length, presentToken.start);
+        unexpected_operand("register or memory", code, presentToken);
         return PARSE_ERROR;
     }
     return COMPILE_OK;
@@ -309,6 +321,7 @@ static Bytecode get_sp_version_of(Bytecode code){
             return BYTECODE_dad_SP;
         default:
             perr("[Internal error] SP version required for code %d", code);
+            token_highlight_source(presentToken);
             return BYTECODE_hlt;
     }
 }
@@ -324,8 +337,7 @@ static CompilationStatus compile_regpair_or_sp(Token t){
         write_byte(get_sp_version_of(code)); // get the sp version
     }
     else{
-        perr("[line %d] Expected register pair or stack pointer [received %.*s]!", presentToken.line, 
-                presentToken.length, presentToken.start);
+        unexpected_operand("register pair or stack pointer", code, presentToken);
         return PARSE_ERROR;
     }
     return COMPILE_OK;
@@ -339,8 +351,7 @@ static CompilationStatus compile_regpair(Token t){
         return COMPILE_OK;
     }
     else{
-        perr("[line %d] Expected register pair [received %.*s]", presentToken.line, 
-                presentToken.length, presentToken.start);
+        unexpected_operand("register pair", code, presentToken);
         return PARSE_ERROR;
     }
 }
@@ -349,7 +360,7 @@ static CompilationStatus compile_lxi(Token t){
     CompilationStatus st = COMPILE_OK;
     if((st = compile_regpair_or_sp(t)) != COMPILE_OK)
         return st;
-    if(!consume(TOKEN_COMMA, "Expected comma between operands"))
+    if(!consume(TOKEN_COMMA, "Expected comma between operands!"))
         return PARSE_ERROR;
     return compile_hex(1);
 }
@@ -359,7 +370,7 @@ static CompilationStatus compile_mov(Token t){
 
     if(isreg(advance())){
         Token prevreg = presentToken;
-        if(!consume(TOKEN_COMMA, "Expected comma between operands"))
+        if(!consume(TOKEN_COMMA, "Expected comma between operands!"))
             return PARSE_ERROR;
         if(isreg(advance())){
             write_byte(code);
@@ -373,13 +384,13 @@ static CompilationStatus compile_mov(Token t){
             return COMPILE_OK;
         }
         else{
-            perr("[line %d] Expected register or memory [received '%.*s']", 
-                    presentToken.line, presentToken.length, presentToken.start);
+            perr("Expected register or memory!"); 
+            token_highlight_source(presentToken);
             return PARSE_ERROR;
         }
     }
     else if(ismem(presentToken)){
-        if(!consume(TOKEN_COMMA, "Expected comma between operands"))
+        if(!consume(TOKEN_COMMA, "Expected comma between operands!"))
             return PARSE_ERROR;
         if(isreg(advance())){
             write_byte(BYTECODE_mov_M);
@@ -387,14 +398,13 @@ static CompilationStatus compile_mov(Token t){
             return COMPILE_OK;
         }
         else{
-            perr("[line %d] Expected register [received '%.*s']", 
-                    presentToken.line, presentToken.length, presentToken.start);
+            perr("Expected register!"); 
+            token_highlight_source(presentToken);
             return PARSE_ERROR;
         }
     }
     else{
-        perr("[line %d] Expected register or memory [received '%.*s']", 
-                presentToken.line, presentToken.length, presentToken.start);
+        unexpected_operand("register or memory", code, presentToken);
         return PARSE_ERROR;
     }
 }
@@ -412,6 +422,7 @@ static Bytecode get_psw_version_of(Bytecode code){
             return BYTECODE_push_PSW;
         default:
             perr("[Internal Error] PSW version required for code %d", code);
+            token_highlight_source(presentToken);
             return BYTECODE_hlt;
     }
 }
@@ -427,8 +438,7 @@ static CompilationStatus compile_regpair_or_psw(Token t){
         write_byte(get_psw_version_of(code)); // get the psw version
     }
     else{
-        perr("[line %d] Expected register pair or psw [received '%.*s']!", presentToken.line, 
-                presentToken.length, presentToken.start);
+        unexpected_operand("register pair or program status word", code, presentToken);
         return PARSE_ERROR;
     }
     return COMPILE_OK;

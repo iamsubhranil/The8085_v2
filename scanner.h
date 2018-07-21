@@ -22,7 +22,9 @@ typedef struct {
     const char* start;
     int length;
     int line;
+    int chidx;
 } Token;
 
 void initScanner(const char* source);
 Token scanToken();
+void token_highlight_source(Token t);

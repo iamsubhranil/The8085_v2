@@ -1,0 +1,3 @@
+mov b, cool
+cool:
+hlt
