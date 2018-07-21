@@ -36,12 +36,13 @@ static char* readFile(const char* path) {
 
 int main(int argc, char *argv[]){
     Machine m;
-    m.pc = m.sp = 0;
+    m.pc = 0;
+    m.sp = 0xffff - 1;
     for(u8 i = 0;i < 8; i++){
         m.registers[i] = 0;
     }
     
-    u8 memory[1 << 15];
+    u8 memory[0xffff];
     u16 pointer = 0;
     u16 *p = &pointer;
 
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]){
 
     pinfo("Compiling source");
     pinfo("================");
-    CompilationStatus stat = compile(source, &memory[0], 1 << 15, p); 
+    CompilationStatus stat = compile(source, &memory[0], 0xffff, p); 
 
     if(stat != COMPILE_OK){
         perr("Error occurred while compilation. Unable to run!");
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]){
 
     pinfo("Disassembling compiled chunk");
     pinfo("============================\n");
-    bytecode_disassemble_chunk(memory, 0);
+    bytecode_disassemble_chunk(memory, 0, pointer);
 
     printf("\n\n");
     pinfo("Running chunk");
