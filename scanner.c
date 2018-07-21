@@ -85,7 +85,7 @@ void token_highlight_source(Token t){
         putchar(*s);
         s++;
     }
-    printf("\n        %.*s", line > 9 ? 2 : line > 99 ? 3 : 1, " ");
+    printf("\n        %.*s", line > 9 ? 2 : line > 99 ? 3 : 1, "    ");
     while(t.chidx > 0){
         printf(" ");
         t.chidx--;
