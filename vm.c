@@ -92,14 +92,14 @@ void run(Machine *m, u8 *memory){
             m->pc = addr;           \
         break;
 
-    #define CALL_ON(cond)                           \
-        u16 addr = NEXT_DWORD();                    \
-        if(cond){                                   \
-            memory[m->sp] = (m->pc & 0xff00) >> 8;  \
-            memory[m->sp - 1] = m->pc & 0x00ff;     \
-            m->sp -= 2;                             \
-            m->pc = addr;                           \
-        }                                           \
+    #define CALL_ON(cond)                               \
+        u16 addr = NEXT_DWORD();                        \
+        if(cond){                                       \
+            memory[m->sp - 1] = (m->pc & 0xff00) >> 8;  \
+            memory[m->sp - 2] = m->pc & 0x00ff;         \
+            m->sp -= 2;                                 \
+            m->pc = addr;                               \
+        }                                               \
         break;
 
     #define RET_ON(cond)                \
@@ -566,6 +566,23 @@ void run(Machine *m, u8 *memory){
                 {
                     m->pc = m->registers[REG_L];
                     m->pc |= (m->registers[REG_H] << 8);
+                    break;
+                }
+            case BYTECODE_pop:
+                {
+                    u8 reg = NEXT_BYTE();
+                    m->registers[reg + 1] = memory[m->sp];
+                    m->sp++;
+                    m->registers[reg] = memory[m->sp];
+                    m->sp++;
+                    break;
+                }
+            case BYTECODE_pop_PSW:
+                {
+                    m->registers[REG_FL] = memory[m->sp];
+                    m->sp++;
+                    m->registers[REG_A] = memory[m->sp];
+                    m->sp++;
                     break;
                 }
             case BYTECODE_hlt:

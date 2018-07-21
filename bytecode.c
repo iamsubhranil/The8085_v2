@@ -23,7 +23,8 @@ static const char* bytecode_strings[] = {
     "xra   m",
     "cmp   m",
     "adc   m",
-    "dad   sp"
+    "dad   sp",
+    "pop   psw"
 };
 
 const char* bytecode_get_string(Bytecode code){
@@ -155,6 +156,7 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // TOKEN_OUT   
    
     dis_no_operand,         // TOKEN_PCHL
+    dis_reg,                // TOKEN_POP
 
     dis_no_operand,         // TOKEN_RAL
     dis_no_operand,         // TOKEN_RAR
@@ -192,6 +194,7 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // cmp m
     dis_no_operand,         // adc m
     dis_no_operand,         // dad sp
+    dis_no_operand,         // pop psw
 };
 
 void bytecode_disassemble(u8 *memory, u16 pointer){
@@ -233,6 +236,11 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
                 u16 addr = FROM_PAIR(memory[pointer - 1], memory[pointer - 1] + 1);
                 printf("\t(%s : 0x%x, memory[0x%x] : 0x%x)", GET_PAIR(memory[pointer - 1]), 
                         addr, addr, memory[addr]);
+                break;
+            }
+        case BYTECODE_pop_PSW:
+            {
+                printf("\t(A : 0x%x, FLAGS : 0x%x)", m->registers[REG_A], m->registers[REG_FL]);
                 break;
             }
         default:

@@ -268,7 +268,7 @@ static CompilationStatus compile_reg_or_mem(Token t){
         compile_reg(presentToken);
     }
     else if(ismem(presentToken)){
-        write_byte(get_m_version_of(code)); // the +1th bytecode is usually the _M version
+        write_byte(get_m_version_of(code)); // get the m version
     }
     else{
         perr("[line %d] Expected register or memory [received %.*s]!", presentToken.line, 
@@ -319,7 +319,7 @@ static CompilationStatus compile_regpair_or_sp(Token t){
         compile_reg(presentToken);
     }
     else if(issp(presentToken)){
-        write_byte(get_sp_version_of(code)); // the +1th bytecode is usually the _SP version
+        write_byte(get_sp_version_of(code)); // get the sp version
     }
     else{
         perr("[line %d] Expected register pair or stack pointer [received %.*s]!", presentToken.line, 
@@ -397,6 +397,39 @@ static CompilationStatus compile_mov(Token t){
     }
 }
 
+static bool ispsw(Token t){
+    return t.type == TOKEN_IDENTIFIER && t.length == 3
+        && t.start[0] == 'p' && t.start[1] == 's' && t.start[2] == 'w';
+}
+
+static Bytecode get_psw_version_of(Bytecode code){
+    switch(code){
+        case BYTECODE_pop:
+            return BYTECODE_pop_PSW;
+        default:
+            perr("[Internal Error] PSW version required for code %d", code);
+            return BYTECODE_hlt;
+    }
+}
+
+static CompilationStatus compile_regpair_or_psw(Token t){
+    Bytecode code = bytecodes[t.type];
+
+    if(isregpair(advance())){ // check whether or not the next token is a register pair
+        write_byte(code);
+        compile_reg(presentToken);
+    }
+    else if(ispsw(presentToken)){
+        write_byte(get_psw_version_of(code)); // get the psw version
+    }
+    else{
+        perr("[line %d] Expected register pair or psw [received '%.*s']!", presentToken.line, 
+                presentToken.length, presentToken.start);
+        return PARSE_ERROR;
+    }
+    return COMPILE_OK;
+}
+
 static compilerFn compilationTable[] = {
     // Single-character tokens.
     unexpected_token,           // TOKEN_COLON
@@ -460,6 +493,7 @@ static compilerFn compilationTable[] = {
     compile_no_operand,         // TOKEN_OUT   
    
     compile_no_operand,         // TOKEN_PCHL
+    compile_regpair_or_psw,     // TOKEN_POP
 
     compile_no_operand,         // TOKEN_RAL
     compile_no_operand,         // TOKEN_RAR
