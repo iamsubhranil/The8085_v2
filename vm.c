@@ -633,6 +633,11 @@ void run(Machine *m, u8 *memory){
                     memory[addr + 1] = m->registers[REG_H];
                     break;
                 }
+            case BYTECODE_sphl:
+                {
+                    m->sp = FROM_HL();
+                    break;
+                }
             case BYTECODE_hlt:
                 return;
             case BYTECODE_nop:
