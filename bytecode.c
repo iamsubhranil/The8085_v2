@@ -227,12 +227,10 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
     }
 }
 
-void bytecode_disassemble_chunk(u8 *memory, u16 pointer){
-    while(1){
+void bytecode_disassemble_chunk(u8 *memory, u16 pointer, u16 upto){
+    while(pointer < upto){
         pred("\n%04x:\t", pointer);
         pblue("%-5s", bytecode_strings[memory[pointer]]);
-        if(memory[pointer] == BYTECODE_hlt)
-            break;
         pointer++;
         disassembleTable[memory[pointer - 1]](memory, &pointer);
     }
