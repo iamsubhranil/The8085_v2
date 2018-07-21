@@ -518,6 +518,7 @@ static compilerFn compilationTable[] = {
     compile_no_operand,         // TOKEN_SPHL
     compile_hex16_operand,      // TOKEN_STA
     compile_regpair,            // TOKEN_STAX
+    compile_no_operand,         // TOKEN_STC
     compile_reg_or_mem,         // TOKEN_SUB
     compile_hex8_operand,       // TOKEN_SUI
 

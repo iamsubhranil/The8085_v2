@@ -179,6 +179,7 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // TOKEN_SPHL
     dis_hex16_operand,      // TOKEN_STA
     dis_reg,                // TOKEN_STAX
+    dis_no_operand,         // TOKEN_STC
     dis_reg,                // TOKEN_SUB
     dis_hex8_operand,       // TOKEN_SUI
 

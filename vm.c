@@ -638,6 +638,11 @@ void run(Machine *m, u8 *memory){
                     m->sp = FROM_HL();
                     break;
                 }
+            case BYTECODE_stc:
+                {
+                    SET_FLAG(FLG_C);
+                    break;
+                }
             case BYTECODE_hlt:
                 return;
             case BYTECODE_nop:
