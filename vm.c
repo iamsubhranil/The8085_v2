@@ -110,12 +110,12 @@ void run(Machine *m, u8 *memory){
         }                                               \
         break;
 
-    #define RET_ON(cond)                \
-        if(cond){                       \
-            m->pc = memory[m->sp] << 8; \
-            m->pc |= memory[m->sp + 1]; \
-            m->sp += 2;                 \
-        }                               \
+    #define RET_ON(cond)                        \
+        if(cond){                               \
+            m->pc = memory[m->sp];              \
+            m->pc |= (memory[m->sp + 1] << 8);  \
+            m->sp += 2;                         \
+        }                                       \
         break;
 
     #define DAD()                                   \
