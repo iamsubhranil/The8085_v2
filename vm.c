@@ -57,11 +57,24 @@ void run(Machine *m, u8 *memory){
     #define INIT_FLAGS(res)     \
         INIT_FLG_C(res)         \
         INIT_FLG_Z(res)         \
-        INIT_FLG_S(res) 
+        INIT_FLG_S(res)
+
+    #define INIT_FLG_A(x, y)                            \
+        if(((x) & 0x00ff) + ((y) & 0x00ff) > 0x00ff)    \
+            SET_FLAG(FLG_A);                            \
+        else                                            \
+            RESET_FLAG(FLG_A);
 
     #define ADD()                                           \
         u16 res = with + m->registers[REG_A];               \
         INIT_FLAGS(res);                                    \
+        INIT_FLG_A(with, m->registers[REG_A]);              \
+        m->registers[REG_A] = res & 0xff;
+
+    #define ADD2()                                          \
+        u16 res = with1 + with2 + m->registers[REG_A];      \
+        INIT_FLAGS(res);                                    \
+        INIT_FLG_A(with1 + with2, m->registers[REG_A]);     \
         m->registers[REG_A] = res & 0xff;
    
     #define SUB()               \
@@ -87,14 +100,14 @@ void run(Machine *m, u8 *memory){
             m->pc = addr;           \
         break;
 
-    #define CALL_ON(cond)                           \
-        u16 addr = NEXT_DWORD();                    \
-        if(cond){                                   \
-            memory[m->sp] = (m->pc & 0xff00) >> 8;  \
-            memory[m->sp - 1] = m->pc & 0x00ff;     \
-            m->sp -= 2;                             \
-            m->pc = addr;                           \
-        }                                           \
+    #define CALL_ON(cond)                               \
+        u16 addr = NEXT_DWORD();                        \
+        if(cond){                                       \
+            memory[m->sp - 1] = (m->pc & 0xff00) >> 8;  \
+            memory[m->sp - 2] = m->pc & 0x00ff;         \
+            m->sp -= 2;                                 \
+            m->pc = addr;                               \
+        }                                               \
         break;
 
     #define RET_ON(cond)                \
@@ -105,6 +118,13 @@ void run(Machine *m, u8 *memory){
         }                               \
         break;
 
+    #define DAD()                                   \
+        u32 res = FROM_PAIR(REG_H, REG_L) + with;   \
+        if(res > 0xffff)                            \
+            SET_FLAG(FLG_C);                        \
+        m->registers[REG_H] = (res & 0xff00) >> 8;  \
+        m->registers[REG_L] = res & 0x00ff;
+    
     Bytecode opcode;
     while((opcode = (Bytecode)NEXT_BYTE()) != BYTECODE_hlt){
         printf("\n");
@@ -168,6 +188,13 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] = memory[from];
                     break;
                 }
+            case BYTECODE_lhld:
+                {
+                    u16 addr = NEXT_DWORD();
+                    m->registers[REG_L] = memory[addr];
+                    m->registers[REG_H] = memory[addr + 1];
+                    break;
+                }
             case BYTECODE_sta:
                 {
                     u16 to = NEXT_DWORD();
@@ -179,6 +206,24 @@ void run(Machine *m, u8 *memory){
                     u8 first = NEXT_BYTE();
                     u16 to = FROM_PAIR(first, first + 1);
                     memory[to] = m->registers[REG_A];
+                    break;
+                }
+            case BYTECODE_aci:
+                {
+                    u8 with1 = NEXT_BYTE(), with2 = GET_FLAG(FLG_C);
+                    ADD2();
+                    break;
+                }
+            case BYTECODE_adc:
+                {
+                    u8 with1 = m->registers[NEXT_BYTE()], with2 = GET_FLAG(FLG_C);
+                    ADD2();
+                    break;
+                }
+            case BYTECODE_adc_M:
+                {
+                    u8 with1 = memory[FROM_HL()], with2 = GET_FLAG(FLG_C);
+                    ADD2();
                     break;
                 }
             case BYTECODE_add:
@@ -193,7 +238,7 @@ void run(Machine *m, u8 *memory){
                     ADD();
                     break;
                 }
-            case BYTECODE_addi:
+            case BYTECODE_adi:
                 {
                     u8 with = NEXT_BYTE();
                     ADD();
@@ -229,6 +274,24 @@ void run(Machine *m, u8 *memory){
                     m->sp++;
                     break;
                 }
+            case BYTECODE_sbb:
+                {
+                    u8 by = m->registers[NEXT_BYTE()] + GET_FLAG(FLG_C);
+                    SUB();
+                    break;
+                }
+            case BYTECODE_sbb_M:
+                {
+                    u8 by = memory[FROM_HL()] + GET_FLAG(FLG_C);
+                    SUB();
+                    break;
+                }
+            case BYTECODE_sbi:
+                {
+                    u8 by = NEXT_BYTE() + GET_FLAG(FLG_C);
+                    SUB();
+                    break;
+                }
             case BYTECODE_sub:
                 {
                     u8 by = m->registers[NEXT_BYTE()];
@@ -245,6 +308,30 @@ void run(Machine *m, u8 *memory){
                 {
                     u8 by = NEXT_BYTE();
                     SUB();
+                    break;
+                }
+            case BYTECODE_daa:
+                {
+                    u8 low = m->registers[REG_A] & 0x0f, high = m->registers[REG_A] & 0xf0;
+                    u8 with = 0;
+                    if(low > 9 || GET_FLAG(FLG_A))
+                        with |= 0x06;
+                    if(high > 9 || GET_FLAG(FLG_C))
+                        with |= 0x60;
+                    ADD();
+                    break;
+                }
+            case BYTECODE_dad:
+                {
+                    u8 reg = NEXT_BYTE();
+                    u16 with = FROM_PAIR(reg, reg+1);
+                    DAD();
+                    break;
+                }
+            case BYTECODE_dad_SP:
+                {
+                    u16 with = m->sp;
+                    DAD();
                     break;
                 }
             case BYTECODE_dcr:
@@ -337,6 +424,14 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_cma:
                 {
                     m->registers[REG_A] = ~m->registers[REG_A];
+                    break;
+                }
+            case BYTECODE_cmc:
+                {
+                    if(GET_FLAG(FLG_C))
+                        RESET_FLAG(FLG_C);
+                    else
+                        SET_FLAG(FLG_C);
                     break;
                 }
             case BYTECODE_cmp:
@@ -491,6 +586,81 @@ void run(Machine *m, u8 *memory){
                 {
                     printf("\n0x%x\n", m->registers[REG_A]);
                     fflush(stdout);
+                    break;
+                }
+            case BYTECODE_pchl:
+                {
+                    m->pc = m->registers[REG_L];
+                    m->pc |= (m->registers[REG_H] << 8);
+                    break;
+                }
+            case BYTECODE_pop:
+                {
+                    u8 reg = NEXT_BYTE();
+                    m->registers[reg + 1] = memory[m->sp];
+                    m->sp++;
+                    m->registers[reg] = memory[m->sp];
+                    m->sp++;
+                    break;
+                }
+            case BYTECODE_pop_PSW:
+                {
+                    m->registers[REG_FL] = memory[m->sp];
+                    m->sp++;
+                    m->registers[REG_A] = memory[m->sp];
+                    m->sp++;
+                    break;
+                }
+            case BYTECODE_push:
+                {
+                    u8 reg = NEXT_BYTE();
+                    memory[m->sp - 1] = m->registers[reg];
+                    memory[m->sp - 2] = m->registers[reg + 1];
+                    m->sp -= 2;
+                    break;
+                }
+            case BYTECODE_push_PSW:
+                {
+                    memory[m->sp - 1] = m->registers[REG_A];
+                    memory[m->sp - 2] = m->registers[REG_FL];
+                    m->sp -= 2;
+                    break;
+                }
+            case BYTECODE_shld:
+                {
+                    u16 addr = NEXT_DWORD();
+                    memory[addr] = m->registers[REG_L];
+                    memory[addr + 1] = m->registers[REG_H];
+                    break;
+                }
+            case BYTECODE_sphl:
+                {
+                    m->sp = FROM_HL();
+                    break;
+                }
+            case BYTECODE_stc:
+                {
+                    SET_FLAG(FLG_C);
+                    break;
+                }
+            case BYTECODE_xchg:
+                {
+                    u8 td = m->registers[REG_D];
+                    u8 te = m->registers[REG_E];
+                    m->registers[REG_D] = m->registers[REG_H];
+                    m->registers[REG_E] = m->registers[REG_L];
+                    m->registers[REG_H] = td;
+                    m->registers[REG_L] = te;
+                    break;
+                }
+            case BYTECODE_xthl:
+                {
+                    u8 td = memory[m->sp + 1];
+                    u8 te = memory[m->sp];
+                    memory[m->sp + 1] = m->registers[REG_H];
+                    memory[m->sp] = m->registers[REG_L];
+                    m->registers[REG_H] = td;
+                    m->registers[REG_L] = te;
                     break;
                 }
             case BYTECODE_hlt:

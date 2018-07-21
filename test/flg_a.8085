@@ -1,0 +1,3 @@
+mvi a, 0ffh
+adi 1h
+hlt

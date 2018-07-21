@@ -1,0 +1,7 @@
+mvi a, 0ffh
+mvi b, 54h
+adc b
+lxi h, 1010h
+mvi m, 67h
+adc m
+hlt

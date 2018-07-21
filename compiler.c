@@ -252,6 +252,10 @@ static Bytecode get_m_version_of(Bytecode code){
             return BYTECODE_xra_M;
         case BYTECODE_cmp:
             return BYTECODE_cmp_M;
+        case BYTECODE_adc:
+            return BYTECODE_adc_M;
+        case BYTECODE_sbb:
+            return BYTECODE_sbb_M;
         default:
             perr("[Internal Error] M version required for code %d", code);
             return BYTECODE_hlt;
@@ -266,7 +270,7 @@ static CompilationStatus compile_reg_or_mem(Token t){
         compile_reg(presentToken);
     }
     else if(ismem(presentToken)){
-        write_byte(get_m_version_of(code)); // the +1th bytecode is usually the _M version
+        write_byte(get_m_version_of(code)); // get the m version
     }
     else{
         perr("[line %d] Expected register or memory [received %.*s]!", presentToken.line, 
@@ -301,6 +305,8 @@ static Bytecode get_sp_version_of(Bytecode code){
             return BYTECODE_inx_SP;
         case BYTECODE_dcx:
             return BYTECODE_dcx_SP;
+        case BYTECODE_dad:
+            return BYTECODE_dad_SP;
         default:
             perr("[Internal error] SP version required for code %d", code);
             return BYTECODE_hlt;
@@ -315,7 +321,7 @@ static CompilationStatus compile_regpair_or_sp(Token t){
         compile_reg(presentToken);
     }
     else if(issp(presentToken)){
-        write_byte(get_sp_version_of(code)); // the +1th bytecode is usually the _SP version
+        write_byte(get_sp_version_of(code)); // get the sp version
     }
     else{
         perr("[line %d] Expected register pair or stack pointer [received %.*s]!", presentToken.line, 
@@ -393,6 +399,41 @@ static CompilationStatus compile_mov(Token t){
     }
 }
 
+static bool ispsw(Token t){
+    return t.type == TOKEN_IDENTIFIER && t.length == 3
+        && t.start[0] == 'p' && t.start[1] == 's' && t.start[2] == 'w';
+}
+
+static Bytecode get_psw_version_of(Bytecode code){
+    switch(code){
+        case BYTECODE_pop:
+            return BYTECODE_pop_PSW;
+        case BYTECODE_push:
+            return BYTECODE_push_PSW;
+        default:
+            perr("[Internal Error] PSW version required for code %d", code);
+            return BYTECODE_hlt;
+    }
+}
+
+static CompilationStatus compile_regpair_or_psw(Token t){
+    Bytecode code = bytecodes[t.type];
+
+    if(isregpair(advance())){ // check whether or not the next token is a register pair
+        write_byte(code);
+        compile_reg(presentToken);
+    }
+    else if(ispsw(presentToken)){
+        write_byte(get_psw_version_of(code)); // get the psw version
+    }
+    else{
+        perr("[line %d] Expected register pair or psw [received '%.*s']!", presentToken.line, 
+                presentToken.length, presentToken.start);
+        return PARSE_ERROR;
+    }
+    return COMPILE_OK;
+}
+
 static compilerFn compilationTable[] = {
     // Single-character tokens.
     unexpected_token,           // TOKEN_COLON
@@ -403,8 +444,10 @@ static compilerFn compilationTable[] = {
     unexpected_token,           // TOKEN_NUMBER
 
     // Keywords.
+    compile_hex8_operand,       // TOKEN_ACI
+    compile_reg_or_mem,         // TOKEN_ADC
     compile_reg_or_mem,         // TOKEN_ADD
-    compile_hex8_operand,       // TOKEN_ADDI
+    compile_hex8_operand,       // TOKEN_ADI
     compile_reg_or_mem,         // TOKEN_ANA
     compile_hex8_operand,       // TOKEN_ANI
     
@@ -412,6 +455,7 @@ static compilerFn compilationTable[] = {
     compile_hex16_operand,      // TOKEN_CC
     compile_hex16_operand,      // TOKEN_CM
     compile_no_operand,         // TOKEN_CMA
+    compile_no_operand,         // TOKEN_CMC
     compile_reg_or_mem,         // TOKEN_CMP
     compile_hex16_operand,      // TOKEN_CNC
     compile_hex16_operand,      // TOKEN_CNZ
@@ -419,6 +463,8 @@ static compilerFn compilationTable[] = {
     compile_hex8_operand,       // TOKEN_CPI
     compile_hex16_operand,      // TOKEN_CZ
 
+    compile_no_operand,         // TOKEN_DAA
+    compile_regpair_or_sp,      // TOKEN_DAD
     compile_reg_or_mem,         // TOKEN_DCR
     compile_regpair_or_sp,      // TOKEN_DCX
 
@@ -438,6 +484,7 @@ static compilerFn compilationTable[] = {
     
     compile_hex16_operand,      // TOKEN_LDA
     compile_regpair,            // TOKEN_LDAX
+    compile_hex16_operand,      // TOKEN_LHLD
     compile_lxi,                // TOKEN_LXI
     
     compile_mov,                // TOKEN_MOV
@@ -448,7 +495,11 @@ static compilerFn compilationTable[] = {
     compile_reg_or_mem,         // TOKEN_ORA
     compile_hex8_operand,       // TOKEN_ORI
     compile_no_operand,         // TOKEN_OUT   
-    
+   
+    compile_no_operand,         // TOKEN_PCHL
+    compile_regpair_or_psw,     // TOKEN_POP
+    compile_regpair_or_psw,     // TOKEN_PUSH
+
     compile_no_operand,         // TOKEN_RAL
     compile_no_operand,         // TOKEN_RAR
     compile_no_operand,         // TOKEN_RC
@@ -460,14 +511,21 @@ static compilerFn compilationTable[] = {
     compile_no_operand,         // TOKEN_RP
     compile_no_operand,         // TOKEN_RRC
     compile_no_operand,         // TOKEN_RZ
-    
+   
+    compile_reg_or_mem,         // TOKEN_SBB
+    compile_hex8_operand,       // TOKEN_SBI
+    compile_hex16_operand,      // TOKEN_SHLD
+    compile_no_operand,         // TOKEN_SPHL
     compile_hex16_operand,      // TOKEN_STA
     compile_regpair,            // TOKEN_STAX
+    compile_no_operand,         // TOKEN_STC
     compile_reg_or_mem,         // TOKEN_SUB
     compile_hex8_operand,       // TOKEN_SUI
 
+    compile_no_operand,         // TOKEN_XCHG
     compile_reg_or_mem,         // TOKEN_XRA
     compile_hex8_operand,       // TOKEN_XRI
+    compile_no_operand,         // TOKEN_XTHL
 
     // Special purpose tokens.
     unexpected_token,           // TOKEN_ERROR

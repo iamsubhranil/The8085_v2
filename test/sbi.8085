@@ -1,0 +1,4 @@
+mvi a, 37h
+cmc
+sbi 25h
+hlt

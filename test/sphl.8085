@@ -1,0 +1,3 @@
+lxi h, 0abcdh
+sphl
+hlt

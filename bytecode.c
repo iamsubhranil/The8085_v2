@@ -21,7 +21,12 @@ static const char* bytecode_strings[] = {
     "ana   m",
     "ora   m",
     "xra   m",
-    "cmp   m"
+    "cmp   m",
+    "adc   m",
+    "dad   sp",
+    "pop   psw",
+    "push  psw",
+    "sbb   m",
 };
 
 const char* bytecode_get_string(Bytecode code){
@@ -100,6 +105,8 @@ static void dis_mvi(u8 *memory, u16 *pointer){
 static disassembleFn disassembleTable[] = {
 
     // Keywords.
+    dis_hex8_operand,       // TOKEN_ACI
+    dis_reg,                // TOKEN_ADC
     dis_reg,         // TOKEN_ADD
     dis_hex8_operand,       // TOKEN_ADDI
     dis_reg,         // TOKEN_ANA
@@ -109,6 +116,7 @@ static disassembleFn disassembleTable[] = {
     dis_hex16_operand,      // TOKEN_CC
     dis_hex16_operand,      // TOKEN_CM
     dis_no_operand,         // TOKEN_CMA
+    dis_no_operand,         // TOKEN_CMC
     dis_reg,         // TOKEN_CMP
     dis_hex16_operand,      // TOKEN_CNC
     dis_hex16_operand,      // TOKEN_CNZ
@@ -116,6 +124,8 @@ static disassembleFn disassembleTable[] = {
     dis_hex8_operand,       // TOKEN_CPI
     dis_hex16_operand,      // TOKEN_CZ
 
+    dis_no_operand,         // TOKEN_DAA
+    dis_reg,                // TOKEN_DAD
     dis_reg,         // TOKEN_DCR
     dis_reg,      // TOKEN_DCX
 
@@ -134,7 +144,8 @@ static disassembleFn disassembleTable[] = {
     dis_hex16_operand,      // TOKEN_JZ   
     
     dis_hex16_operand,      // TOKEN_LDA
-    dis_reg,            // TOKEN_LDAX
+    dis_reg,                // TOKEN_LDAX
+    dis_hex16_operand,      // TOKEN_LHLD
     dis_lxi,                // TOKEN_LXI
     
     dis_mov,                // TOKEN_MOV
@@ -145,7 +156,11 @@ static disassembleFn disassembleTable[] = {
     dis_reg,         // TOKEN_ORA
     dis_hex8_operand,       // TOKEN_ORI
     dis_no_operand,         // TOKEN_OUT   
-    
+   
+    dis_no_operand,         // TOKEN_PCHL
+    dis_reg,                // TOKEN_POP
+    dis_reg,                // TOKEN_PUSH
+
     dis_no_operand,         // TOKEN_RAL
     dis_no_operand,         // TOKEN_RAR
     dis_no_operand,         // TOKEN_RC
@@ -157,14 +172,21 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // TOKEN_RP
     dis_no_operand,         // TOKEN_RRC
     dis_no_operand,         // TOKEN_RZ
-    
+   
+    dis_reg,                // TOKEN_SBB
+    dis_hex8_operand,       // TOKEN_SBI
+    dis_hex16_operand,      // TOKEN_SHLD
+    dis_no_operand,         // TOKEN_SPHL
     dis_hex16_operand,      // TOKEN_STA
-    dis_reg,            // TOKEN_STAX
-    dis_reg,         // TOKEN_SUB
+    dis_reg,                // TOKEN_STAX
+    dis_no_operand,         // TOKEN_STC
+    dis_reg,                // TOKEN_SUB
     dis_hex8_operand,       // TOKEN_SUI
 
-    dis_reg,         // TOKEN_XRA
+    dis_no_operand,         // TOKEN_XCHG
+    dis_reg,                // TOKEN_XRA
     dis_hex8_operand,       // TOKEN_XRI
+    dis_no_operand,         // TOKEN_XTHL
     
     dis_hex16_operand,      // lxi_SP
     dis_no_operand,         // dcx sp
@@ -180,6 +202,11 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // xra m
     dis_no_operand,         // ora m
     dis_no_operand,         // cmp m
+    dis_no_operand,         // adc m
+    dis_no_operand,         // dad sp
+    dis_no_operand,         // pop psw
+    dis_no_operand,         // push psw
+    dis_no_operand,         // sbb m
 };
 
 void bytecode_disassemble(u8 *memory, u16 pointer){
@@ -212,6 +239,8 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
         case BYTECODE_ora_M:
         case BYTECODE_xra_M:
         case BYTECODE_cmp_M:
+        case BYTECODE_adc_M:
+        case BYTECODE_sbb_M:
             printf("\t(HL : 0x%x, memory[0x%x] : 0x%x)", FROM_HL(), FROM_HL(), memory[FROM_HL()]);
             break;
         case BYTECODE_ldax:
@@ -220,6 +249,12 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
                 u16 addr = FROM_PAIR(memory[pointer - 1], memory[pointer - 1] + 1);
                 printf("\t(%s : 0x%x, memory[0x%x] : 0x%x)", GET_PAIR(memory[pointer - 1]), 
                         addr, addr, memory[addr]);
+                break;
+            }
+        case BYTECODE_pop_PSW:
+        case BYTECODE_push_PSW:
+            {
+                printf("\t(A : 0x%x, FLAGS : 0x%x)", m->registers[REG_A], m->registers[REG_FL]);
                 break;
             }
         default:

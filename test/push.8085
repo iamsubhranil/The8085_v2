@@ -1,0 +1,13 @@
+lxi b, 89abh
+lxi d, 0cdefh
+push b
+push d
+pop b
+pop d
+mvi a, 23h
+cmc
+push psw
+pop h
+push b
+pop psw
+hlt

@@ -1,0 +1,6 @@
+lxi h, 1010h
+mvi m, 0abh
+lxi h, 1011h
+mvi m, 0cdh
+lhld 1010h
+hlt
