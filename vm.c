@@ -57,16 +57,24 @@ void run(Machine *m, u8 *memory){
     #define INIT_FLAGS(res)     \
         INIT_FLG_C(res)         \
         INIT_FLG_Z(res)         \
-        INIT_FLG_S(res) 
+        INIT_FLG_S(res)
+
+    #define INIT_FLG_A(x, y)                            \
+        if(((x) & 0x00ff) + ((y) & 0x00ff) > 0x00ff)    \
+            SET_FLAG(FLG_A);                            \
+        else                                            \
+            RESET_FLAG(FLG_A);
 
     #define ADD()                                           \
         u16 res = with + m->registers[REG_A];               \
         INIT_FLAGS(res);                                    \
+        INIT_FLG_A(with, m->registers[REG_A]);              \
         m->registers[REG_A] = res & 0xff;
 
     #define ADD2()                                          \
         u16 res = with1 + with2 + m->registers[REG_A];      \
         INIT_FLAGS(res);                                    \
+        INIT_FLG_A(with1 + with2, m->registers[REG_A]);     \
         m->registers[REG_A] = res & 0xff;
    
     #define SUB()               \
@@ -275,6 +283,12 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_sbb_M:
                 {
                     u8 by = memory[FROM_HL()] + GET_FLAG(FLG_C);
+                    SUB();
+                    break;
+                }
+            case BYTECODE_sbi:
+                {
+                    u8 by = NEXT_BYTE() + GET_FLAG(FLG_C);
                     SUB();
                     break;
                 }
