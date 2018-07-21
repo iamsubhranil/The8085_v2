@@ -653,6 +653,16 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_L] = te;
                     break;
                 }
+            case BYTECODE_xthl:
+                {
+                    u8 td = memory[m->sp + 1];
+                    u8 te = memory[m->sp];
+                    memory[m->sp + 1] = m->registers[REG_H];
+                    memory[m->sp] = m->registers[REG_L];
+                    m->registers[REG_H] = td;
+                    m->registers[REG_L] = te;
+                    break;
+                }
             case BYTECODE_hlt:
                 return;
             case BYTECODE_nop:

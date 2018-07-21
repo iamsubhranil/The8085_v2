@@ -525,6 +525,7 @@ static compilerFn compilationTable[] = {
     compile_no_operand,         // TOKEN_XCHG
     compile_reg_or_mem,         // TOKEN_XRA
     compile_hex8_operand,       // TOKEN_XRI
+    compile_no_operand,         // TOKEN_XTHL
 
     // Special purpose tokens.
     unexpected_token,           // TOKEN_ERROR
