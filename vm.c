@@ -63,6 +63,11 @@ void run(Machine *m, u8 *memory){
         u16 res = with + m->registers[REG_A];               \
         INIT_FLAGS(res);                                    \
         m->registers[REG_A] = res & 0xff;
+
+    #define ADD2()                                          \
+        u16 res = with1 + with2 + m->registers[REG_A];      \
+        INIT_FLAGS(res);                                    \
+        m->registers[REG_A] = res & 0xff;
    
     #define SUB()               \
         u8 with = ~by + 1;      \
@@ -179,6 +184,24 @@ void run(Machine *m, u8 *memory){
                     u8 first = NEXT_BYTE();
                     u16 to = FROM_PAIR(first, first + 1);
                     memory[to] = m->registers[REG_A];
+                    break;
+                }
+            case BYTECODE_aci:
+                {
+                    u8 with1 = NEXT_BYTE(), with2 = GET_FLAG(FLG_C);
+                    ADD2();
+                    break;
+                }
+            case BYTECODE_adc:
+                {
+                    u8 with1 = m->registers[NEXT_BYTE()], with2 = GET_FLAG(FLG_C);
+                    ADD2();
+                    break;
+                }
+            case BYTECODE_adc_M:
+                {
+                    u8 with1 = memory[FROM_HL()], with2 = GET_FLAG(FLG_C);
+                    ADD2();
                     break;
                 }
             case BYTECODE_add:
@@ -337,6 +360,14 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_cma:
                 {
                     m->registers[REG_A] = ~m->registers[REG_A];
+                    break;
+                }
+            case BYTECODE_cmc:
+                {
+                    if(GET_FLAG(FLG_C))
+                        RESET_FLAG(FLG_C);
+                    else
+                        SET_FLAG(FLG_C);
                     break;
                 }
             case BYTECODE_cmp:

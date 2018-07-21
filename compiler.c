@@ -252,6 +252,8 @@ static Bytecode get_m_version_of(Bytecode code){
             return BYTECODE_xra_M;
         case BYTECODE_cmp:
             return BYTECODE_cmp_M;
+        case BYTECODE_adc:
+            return BYTECODE_adc_M;
         default:
             perr("[Internal Error] M version required for code %d", code);
             return BYTECODE_hlt;
@@ -403,6 +405,8 @@ static compilerFn compilationTable[] = {
     unexpected_token,           // TOKEN_NUMBER
 
     // Keywords.
+    compile_hex8_operand,       // TOKEN_ACI
+    compile_reg_or_mem,         // TOKEN_ADC
     compile_reg_or_mem,         // TOKEN_ADD
     compile_hex8_operand,       // TOKEN_ADDI
     compile_reg_or_mem,         // TOKEN_ANA
@@ -412,6 +416,7 @@ static compilerFn compilationTable[] = {
     compile_hex16_operand,      // TOKEN_CC
     compile_hex16_operand,      // TOKEN_CM
     compile_no_operand,         // TOKEN_CMA
+    compile_no_operand,         // TOKEN_CMC
     compile_reg_or_mem,         // TOKEN_CMP
     compile_hex16_operand,      // TOKEN_CNC
     compile_hex16_operand,      // TOKEN_CNZ

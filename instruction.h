@@ -3,6 +3,8 @@
 // If an instruction has a _M or _R version, define them
 // at the end of Bytecode enum, and create a replacement
 // case in compiler.c
+INSTRUCTION(aci, 3)
+INSTRUCTION(adc, 3)
 INSTRUCTION(add, 3)
 INSTRUCTION(addi, 4)
 INSTRUCTION(ana, 3)
@@ -11,6 +13,7 @@ INSTRUCTION(call, 4)
 INSTRUCTION(cc, 2)
 INSTRUCTION(cm, 2)
 INSTRUCTION(cma, 3)
+INSTRUCTION(cmc, 3)
 INSTRUCTION(cmp, 3)
 INSTRUCTION(cnc, 3)
 INSTRUCTION(cnz, 3)

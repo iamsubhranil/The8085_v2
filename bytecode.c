@@ -21,7 +21,8 @@ static const char* bytecode_strings[] = {
     "ana   m",
     "ora   m",
     "xra   m",
-    "cmp   m"
+    "cmp   m",
+    "adc   m"
 };
 
 const char* bytecode_get_string(Bytecode code){
@@ -100,6 +101,8 @@ static void dis_mvi(u8 *memory, u16 *pointer){
 static disassembleFn disassembleTable[] = {
 
     // Keywords.
+    dis_hex8_operand,       // TOKEN_ACI
+    dis_reg,                // TOKEN_ADC
     dis_reg,         // TOKEN_ADD
     dis_hex8_operand,       // TOKEN_ADDI
     dis_reg,         // TOKEN_ANA
@@ -109,6 +112,7 @@ static disassembleFn disassembleTable[] = {
     dis_hex16_operand,      // TOKEN_CC
     dis_hex16_operand,      // TOKEN_CM
     dis_no_operand,         // TOKEN_CMA
+    dis_no_operand,         // TOKEN_CMC
     dis_reg,         // TOKEN_CMP
     dis_hex16_operand,      // TOKEN_CNC
     dis_hex16_operand,      // TOKEN_CNZ
@@ -180,6 +184,7 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // xra m
     dis_no_operand,         // ora m
     dis_no_operand,         // cmp m
+    dis_no_operand,         // adc m
 };
 
 void bytecode_disassemble(u8 *memory, u16 pointer){
@@ -212,6 +217,7 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
         case BYTECODE_ora_M:
         case BYTECODE_xra_M:
         case BYTECODE_cmp_M:
+        case BYTECODE_adc_M:
             printf("\t(HL : 0x%x, memory[0x%x] : 0x%x)", FROM_HL(), FROM_HL(), memory[FROM_HL()]);
             break;
         case BYTECODE_ldax:
