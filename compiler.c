@@ -303,6 +303,8 @@ static Bytecode get_sp_version_of(Bytecode code){
             return BYTECODE_inx_SP;
         case BYTECODE_dcx:
             return BYTECODE_dcx_SP;
+        case BYTECODE_dad:
+            return BYTECODE_dad_SP;
         default:
             perr("[Internal error] SP version required for code %d", code);
             return BYTECODE_hlt;
@@ -425,6 +427,7 @@ static compilerFn compilationTable[] = {
     compile_hex16_operand,      // TOKEN_CZ
 
     compile_no_operand,         // TOKEN_DAA
+    compile_regpair_or_sp,      // TOKEN_DAD
     compile_reg_or_mem,         // TOKEN_DCR
     compile_regpair_or_sp,      // TOKEN_DCX
 

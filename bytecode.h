@@ -23,6 +23,7 @@ typedef enum{
     BYTECODE_xra_M,  // xra m
     BYTECODE_cmp_M,  // cmp m
     BYTECODE_adc_M,  // adc m
+    BYTECODE_dad_SP, // dad sp
 } Bytecode;
 
 const char* bytecode_get_string(Bytecode code);

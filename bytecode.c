@@ -22,7 +22,8 @@ static const char* bytecode_strings[] = {
     "ora   m",
     "xra   m",
     "cmp   m",
-    "adc   m"
+    "adc   m",
+    "dad   sp"
 };
 
 const char* bytecode_get_string(Bytecode code){
@@ -121,6 +122,7 @@ static disassembleFn disassembleTable[] = {
     dis_hex16_operand,      // TOKEN_CZ
 
     dis_no_operand,         // TOKEN_DAA
+    dis_reg,                // TOKEN_DAD
     dis_reg,         // TOKEN_DCR
     dis_reg,      // TOKEN_DCX
 
@@ -186,6 +188,7 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // ora m
     dis_no_operand,         // cmp m
     dis_no_operand,         // adc m
+    dis_no_operand,         // dad sp
 };
 
 void bytecode_disassemble(u8 *memory, u16 pointer){

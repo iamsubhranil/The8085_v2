@@ -110,6 +110,13 @@ void run(Machine *m, u8 *memory){
         }                               \
         break;
 
+    #define DAD()                                   \
+        u32 res = FROM_PAIR(REG_H, REG_L) + with;   \
+        if(res > 0xffff)                            \
+            SET_FLAG(FLG_C);                        \
+        m->registers[REG_H] = (res & 0xff00) >> 8;  \
+        m->registers[REG_L] = res & 0x00ff;
+    
     Bytecode opcode;
     while((opcode = (Bytecode)NEXT_BYTE()) != BYTECODE_hlt){
         printf("\n");
@@ -279,6 +286,19 @@ void run(Machine *m, u8 *memory){
                     if(high > 9 || GET_FLAG(FLG_C))
                         with |= 0x60;
                     ADD();
+                    break;
+                }
+            case BYTECODE_dad:
+                {
+                    u8 reg = NEXT_BYTE();
+                    u16 with = FROM_PAIR(reg, reg+1);
+                    DAD();
+                    break;
+                }
+            case BYTECODE_dad_SP:
+                {
+                    u16 with = m->sp;
+                    DAD();
                     break;
                 }
             case BYTECODE_dcr:
