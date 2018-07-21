@@ -1,0 +1,5 @@
+lxi h, 0242h
+dad h
+lxi h, 0h
+dad sp
+hlt

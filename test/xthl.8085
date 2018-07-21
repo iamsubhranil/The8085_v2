@@ -1,0 +1,6 @@
+lxi d, 0cdefh
+lxi h, 89abh
+push d
+xthl
+pop d
+hlt

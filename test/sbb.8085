@@ -1,0 +1,7 @@
+mvi a, 37h
+mvi b, 3fh
+cmc
+sbb b
+lxi h, 0ffh
+sbb m
+hlt

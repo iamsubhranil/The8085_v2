@@ -1,0 +1,4 @@
+mvi a, 85h
+adi 68h
+daa
+hlt

@@ -1,0 +1,4 @@
+adi 08h
+sbb c
+#
+hlt

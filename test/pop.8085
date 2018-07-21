@@ -1,0 +1,6 @@
+lxi h, 0fffeh
+mvi m, 0abh
+lxi h, 0fffdh
+mvi m, 0cdh
+pop b
+hlt

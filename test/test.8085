@@ -1,0 +1,56 @@
+// Load data in memory
+lxi h, 1010h
+mvi m, 01h
+mvi l, 12h
+mvi m, 02h
+mvi l, 14h
+mvi m, 03h
+
+// Pass arguments
+lxi b, 1010h    // item1
+lxi d, 1012h    // item2
+call sort
+
+lxi b, 1010h    // item1
+lxi d, 1014h    // item3
+call sort
+
+lxi b, 1012h    // item2
+lxi d, 1014h    // item3
+call sort
+
+lxi b, 1010h
+lxi d, 1012h
+lxi h, 1014h
+
+ldax b
+out
+ldax d
+out
+ldax h
+out
+
+
+hlt
+
+// Function sort
+// arg1 : b-c
+// arg2 : d-e
+sort: 
+ldax b      // Load arg1 into accumulator
+mov h, d    // Load the address of arg2 to hl
+mov l, e    //              ""
+mov d, m    // Load arg2 into d
+cmp d       // Compare arg1 and arg2
+jc swap     // Borrow came, hence accumulator is lesser, so swap the elements
+mov d, h    // No borrow, hence accumulator is greater
+ret         // Hence it even was arg1, nothing to swap
+
+swap:
+stax h      // Store the arg1 to the address to arg2
+mov a, h    // Copy the address stored in h to a
+mov h, b    // Load the address in hl
+mov l, c    //          ""
+mov m, d    // Store the arg2 to the address of arg1
+mov d, a    // Restore the address to d
+ret

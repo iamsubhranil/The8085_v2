@@ -1,0 +1,4 @@
+*.out
+build/
+.gdb_history
+vgcore.*
