@@ -626,6 +626,13 @@ void run(Machine *m, u8 *memory){
                     m->sp -= 2;
                     break;
                 }
+            case BYTECODE_shld:
+                {
+                    u16 addr = NEXT_DWORD();
+                    memory[addr] = m->registers[REG_L];
+                    memory[addr + 1] = m->registers[REG_H];
+                    break;
+                }
             case BYTECODE_hlt:
                 return;
             case BYTECODE_nop:
