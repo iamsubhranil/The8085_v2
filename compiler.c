@@ -13,9 +13,10 @@ typedef struct{
     const char *label;
     int length;
     u16 offset;
+    u8 isDeclared;
 } Label;
 
-static Label labelTable[NUM_LABELS] = {{NULL, 0, 0}};
+static Label labelTable[NUM_LABELS] = {{NULL, 0, 0, 0}};
 static siz labelPointer = 0;
 
 // Statically allocate pending labels too
@@ -78,12 +79,14 @@ CompilationStatus compile_label(Token t){
         if(labelTable[i].length == t.length
                 && memcmp(labelTable[i].label, t.start, t.length) == 0){
             labelTable[i].offset = *offset;
+            labelTable[i].isDeclared = 1;
             return COMPILE_OK;
         }
     }
     labelTable[labelPointer].label = t.start;
     labelTable[labelPointer].length = t.length;
     labelTable[labelPointer].offset = *offset;
+    labelTable[labelPointer].isDeclared = 1;
     labelPointer++;
     return COMPILE_OK;
 }
@@ -92,22 +95,35 @@ CompilationStatus compile_hex(u8 is16){
     Token t = advance();
     if(t.type != TOKEN_NUMBER){
         if(t.type == TOKEN_IDENTIFIER && is16 == 1){
+            // Try to patch it immediately
+            u8 found = 0;
+            u16 idx = 0;
             for(u16 i = 0;i < labelPointer;i++){
                 if(labelTable[i].length == t.length
                         && !memcmp(labelTable[i].label, t.start, t.length)){
-                    write_dword(labelTable[i].offset);
-                    return COMPILE_OK;
+                    if(labelTable[i].isDeclared){
+                        write_dword(labelTable[i].offset);
+                        return COMPILE_OK;
+                    }
+                    else{
+                        found = 1;  // The label was found, but it is not declared yet
+                        idx = i;
+                        break;
+                    }
                 }
             }
             // It might be a forward reference
-            labelTable[labelPointer].label = t.start;
-            labelTable[labelPointer].length = t.length;
-            labelTable[labelPointer].offset = 0;
+            if(!found){ // The label was not found earlier
+                labelTable[labelPointer].label = t.start;
+                labelTable[labelPointer].length = t.length;
+                labelTable[labelPointer].offset = 0;
+                labelTable[labelPointer].isDeclared = 0;
+                labelPointer++;
+            }
 
-            pending_labels[pendingPointer].idx = labelPointer;
+            pending_labels[pendingPointer].idx = found ? idx : (labelPointer - 1);
             pending_labels[pendingPointer].offset = *offset;
             pendingPointer++;
-            labelPointer++;
             (*offset) += 2;
             return COMPILE_OK;
         }
@@ -147,12 +163,15 @@ CompilationStatus patch_labels(){
     CompilationStatus ret = COMPILE_OK;
     u16 bak = *offset;
     for(u16 i = 0;i < pendingPointer;i++){
-        if(labelTable[pending_labels[i].idx].offset != 0){
+        if(labelTable[pending_labels[i].idx].isDeclared == 1){
             *offset = pending_labels[i].offset;
             write_dword(labelTable[pending_labels[i].idx].offset);
         }
-        else
+        else{
+            pwarn("Label used but not declared yet : '%.*s'", labelTable[pending_labels[i].idx].length,
+                    labelTable[pending_labels[i].idx].label);
             ret = LABELS_PENDING;
+        }
     }
     *offset = bak;
     return ret;
