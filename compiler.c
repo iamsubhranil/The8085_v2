@@ -447,6 +447,7 @@ static compilerFn compilationTable[] = {
     
     compile_hex16_operand,      // TOKEN_LDA
     compile_regpair,            // TOKEN_LDAX
+    compile_hex16_operand,      // TOKEN_LHLD
     compile_lxi,                // TOKEN_LXI
     
     compile_mov,                // TOKEN_MOV

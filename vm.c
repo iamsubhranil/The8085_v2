@@ -180,6 +180,13 @@ void run(Machine *m, u8 *memory){
                     m->registers[REG_A] = memory[from];
                     break;
                 }
+            case BYTECODE_lhld:
+                {
+                    u16 addr = NEXT_DWORD();
+                    m->registers[REG_L] = memory[addr];
+                    m->registers[REG_H] = memory[addr + 1];
+                    break;
+                }
             case BYTECODE_sta:
                 {
                     u16 to = NEXT_DWORD();

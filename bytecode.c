@@ -141,7 +141,8 @@ static disassembleFn disassembleTable[] = {
     dis_hex16_operand,      // TOKEN_JZ   
     
     dis_hex16_operand,      // TOKEN_LDA
-    dis_reg,            // TOKEN_LDAX
+    dis_reg,                // TOKEN_LDAX
+    dis_hex16_operand,      // TOKEN_LHLD
     dis_lxi,                // TOKEN_LXI
     
     dis_mov,                // TOKEN_MOV
