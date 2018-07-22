@@ -10,24 +10,24 @@
 #define NUM_LABELS  32
 
 typedef struct{
-    Token t;
     const char *label;
     int length;
     u16 offset;
     u8 isDeclared;
 } Label;
 
-static Label labelTable[NUM_LABELS] = {{{},NULL, 0, 0, 0}};
+static Label labelTable[NUM_LABELS] = {{NULL, 0, 0, 0}};
 static siz labelPointer = 0;
 
 // Statically allocate pending labels too
 #define NUM_PENDING_LABELS  32
 typedef struct{
+    Token token;
     u16 idx;
     u16 offset;
 } PendingLabel;
 
-static PendingLabel pending_labels[NUM_PENDING_LABELS] = {{0, 0}};
+static PendingLabel pending_labels[NUM_PENDING_LABELS] = {{{}, 0, 0}};
 static siz pendingPointer = 0;
 
 static u16 memSize = 0, *offset = NULL;
@@ -126,12 +126,12 @@ CompilationStatus compile_hex(u8 is16){
                 labelTable[labelPointer].length = t.length;
                 labelTable[labelPointer].offset = 0;
                 labelTable[labelPointer].isDeclared = 0;
-                labelTable[labelPointer].t = t;
                 labelPointer++;
             }
 
             pending_labels[pendingPointer].idx = found ? idx : (labelPointer - 1);
             pending_labels[pendingPointer].offset = *offset;
+            pending_labels[pendingPointer].token = t;
             pendingPointer++;
             (*offset) += 2;
             return COMPILE_OK;
@@ -180,7 +180,7 @@ CompilationStatus patch_labels(){
         }
         else{
             pwarn("Label used but not declared yet!");
-            token_highlight_source(labelTable[pending_labels[i].idx].t);
+            token_highlight_source(pending_labels[i].token);
             ret = LABELS_PENDING;
         }
     }
