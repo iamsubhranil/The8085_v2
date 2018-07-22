@@ -1,2 +1,4 @@
 jmp function
+jc sort
+jnz function
 hlt
