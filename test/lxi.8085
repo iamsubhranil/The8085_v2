@@ -1,0 +1,4 @@
+lxi b, 4567h
+lxi d, 89abh
+lxi h, 0cdefh
+hlt

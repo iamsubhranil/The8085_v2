@@ -1,0 +1,8 @@
+mvi h, 6h
+mvi d, 87h
+mvi e, 0abh
+mov a, d
+mov b, h
+mov m, e
+mov l, m
+hlt

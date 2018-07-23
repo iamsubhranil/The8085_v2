@@ -1,4 +1,3 @@
-xra a
 mvi a, 0ffh
 aci 01h
 aci 01h
