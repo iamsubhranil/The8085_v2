@@ -125,8 +125,8 @@ void run(Machine *m, u8 *memory){
     
     Bytecode opcode;
     while((opcode = (Bytecode)NEXT_BYTE()) != BYTECODE_hlt){
-        printf("\n");
-        bytecode_disassemble_in_context(memory, m->pc - 1, m);
+        //printf("\n");
+        //bytecode_disassemble_in_context(memory, m->pc - 1, m);
         switch(opcode){
             case BYTECODE_mov:
                 {
@@ -417,7 +417,7 @@ void run(Machine *m, u8 *memory){
                 }
             case BYTECODE_xra_M:
                 {
-                    u8 with = m->registers[NEXT_BYTE()];
+                    u8 with = memory[FROM_HL()];
                     LOGICAL_NOT_CMA(^);
                     break;
                 }
@@ -697,6 +697,6 @@ void run(Machine *m, u8 *memory){
             default:
                 break;
         }
-        print_machine(m);
+        //print_machine(m);
     }
 }
