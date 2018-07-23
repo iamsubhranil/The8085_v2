@@ -681,6 +681,19 @@ CompilationStatus patch_labels(){
     return ret;
 }
 
+// Reset the internal states of the compiler
+void compiler_reset(){
+    labelPointer = 0;
+    pendingPointer = 0;
+
+    memory = NULL;
+    offset = NULL;
+    memSize = 0;
+
+    presentToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
+    previousToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
+}
+
 // The driver
 CompilationStatus compile(const char *source, u8 *mem, u16 size, u16 *off){
     initScanner(source);
