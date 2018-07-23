@@ -18,6 +18,7 @@ static void reset_machine(Machine *m, u8 *memory, u16 size){
 
 static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16 pointer){
     CompilationStatus status;
+    compiler_reset();
     if((status = compile(source, &memory[0], size, &pointer)) != COMPILE_OK){
         pred("[compilation aborted with code %d]", status);
         return false;
@@ -37,10 +38,10 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16
         failed = true;                                  \
     }
 
-#define EXPECT(target, value)                                                  \
+#define EXPECT(target, value)                                                   \
     if(target != value){                                                        \
         pred("\n[Test:%s] ", testname);                                         \
-        printf(#target " -> expected : " #value ", received : 0x%x", target);   \
+        printf(#target " -> expected : 0x%x, received : 0x%x", value, target);  \
         failed = true;                                                          \
     }
 
@@ -108,6 +109,14 @@ void test_all(){
     EXPECT(rl, 0xab);
     DECIDE();
 
+    TEST(cmc);
+    EXPECT(flc, 0x01);
+    DECIDE();
+
+    TEST(stc);
+    EXPECT(flc, 0x01);
+    DECIDE();
+
     TEST(ani);
     EXPECT(ra, 0x00);
     DECIDE();
@@ -155,5 +164,81 @@ void test_all(){
     EXPECT(rb, 0x53);
     EXPECT(ra, 0xbb);
     EXPECT(flc, 0x00);
+    DECIDE();
+
+    TEST(sui);
+    EXPECT(ra, 0x2f);
+    EXPECT(flc, 0x00);
+    DECIDE();
+
+    TEST(sbi);
+    EXPECT(ra, 0x11);
+    EXPECT(flc, 0x00);
+    DECIDE();
+
+    TEST(sub);
+    EXPECT(rb, 0xdc);
+    EXPECT(ra, 0x49);
+    EXPECT(flc, 0x00);
+    DECIDE();
+
+    TEST(sbb);
+    EXPECT(rb, 0xf7);
+    EXPECT(ra, 0xf7);
+    EXPECT(flp, 0x00);
+    EXPECT(flc, 0x01);
+    DECIDE();
+
+    TEST(inr);
+    EXPECT(ra, 0x44);
+    EXPECT(rb, 0x2a);
+    EXPECT(rc, 0x33);
+    EXPECT(rd, 0x76);
+    EXPECT(re, 0x49);
+    EXPECT(rh, 0x39);
+    EXPECT(rl, 0x1a);
+    EXPECT(memory[0x391a], 0x48);
+    EXPECT(flp, 0x01);
+    DECIDE();
+
+    TEST(inx);
+    EXPECT(rb, 0x29);
+    EXPECT(rc, 0x44);
+    EXPECT(rh, 0x18);
+    EXPECT(rl, 0x1a);
+    EXPECT(rd, 0x14);
+    EXPECT(re, 0x00);
+    DECIDE();
+
+    TEST(dcr);
+    EXPECT(ra, 0x42);
+    EXPECT(rb, 0x27);
+    EXPECT(rc, 0x82);
+    EXPECT(rd, 0x83);
+    EXPECT(re, 0x22);
+    EXPECT(rh, 0x93);
+    EXPECT(rl, 0xff);
+    EXPECT(memory[0x93ff], 0x82);
+    EXPECT(flp, 0x01);
+    DECIDE();
+
+    TEST(dcx);
+    EXPECT(rb, 0x73);
+    EXPECT(rc, 0x91);
+    EXPECT(rh, 0x48);
+    EXPECT(rl, 0x17);
+    EXPECT(rd, 0x39);
+    EXPECT(re, 0x2f);
+    DECIDE();
+
+    TEST(call);
+    EXPECT(ra, 0x36);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(cc);
+    EXPECT(ra, 0xab);
+    EXPECT(flc, 0x01);
+    EXPECT(sp, 0xffff - 3);
     DECIDE();
 }

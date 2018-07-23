@@ -1,0 +1,7 @@
+lxi b, 7392h
+dcx b           // 0x7391
+lxi d, 3930h
+dcx d           // 0x392f
+lxi h, 4818h
+dcx h           // 0x4817
+hlt

@@ -1,0 +1,8 @@
+mvi a, 43h  // 0100 0011 -> 0100 0011
+mvi b, 67h  // 0110 0111 -> 1001 1001
+sub b       //              1101 1100 (no borrow, hence ans is -ve)
+mov b, a
+lxi h, 1010h
+mvi m, 93h  // 1001 0011 -> 0110 1101
+sub m       //              0100 1001 (borrow ignored)
+hlt
