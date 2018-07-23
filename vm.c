@@ -49,10 +49,10 @@ void run(Machine *m, u8 *memory){
     #define INIT_FLG_A(x, y)                                            \
         CHANGE_FLAG(FLG_A, (((x) & 0x00ff) + ((y) & 0x00ff) > 0x00ff))
 
-    #define INIT_FLG_P(res)                                             \
-        u8 temp = res & 0xff;                                           \
-        temp = res - (res >> 1) - (res >> 2) - (res >> 3)               \
-                - (res >> 4) - (res >> 5) - (res >> 6) - (res >> 7);    \
+    #define INIT_FLG_P(res)                                                 \
+        u8 temp = res & 0xff;                                               \
+        temp = temp - (temp >> 1) - (temp >> 2) - (temp >> 3)               \
+                - (temp >> 4) - (temp >> 5) - (temp >> 6) - (temp >> 7);    \
         CHANGE_FLAG(FLG_P, !(temp & 1));
 
     #define INIT_FLAGS(res)     \
@@ -73,21 +73,18 @@ void run(Machine *m, u8 *memory){
         INIT_FLG_A(with1 + with2, m->registers[REG_A]);     \
         m->registers[REG_A] = res & 0xff;
    
-    #define SUB()               \
-        u8 with = ~by + 1;      \
-        ADD();                  \
-        if(GET_FLAG(FLG_C))     \
-            RESET_FLAG(FLG_C);  \
-        else                    \
-            SET_FLAG(FLG_C);
+    #define SUB()                           \
+        u8 with = ~by + 1;                  \
+        ADD();                              \
+        CHANGE_FLAG(FLG_C, !GET_FLAG(FLG_C))
 
-    #define LOGICAL(op)   \
+    #define LOGICAL(op)                                     \
         m->registers[REG_A] = m->registers[REG_A] op with;
 
     #define LOGICAL_NOT_CMA(op)         \
         LOGICAL(op)                     \
         RESET_FLAG(FLG_C);              \
-        RESET_FLAG(FLG_A);                \
+        RESET_FLAG(FLG_A);              \
         INIT_FLG_S(m->registers[REG_A]) \
         INIT_FLG_Z(m->registers[REG_A]) \
         INIT_FLG_P(m->registers[REG_A]) \
