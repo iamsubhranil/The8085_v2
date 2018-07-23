@@ -197,6 +197,8 @@ static Bytecode get_m_version_of(Bytecode code){
             return BYTECODE_sub_M;
         case BYTECODE_ana:
             return BYTECODE_ana_M;
+        case BYTECODE_ora:
+            return BYTECODE_ora_M;
         case BYTECODE_xra:
             return BYTECODE_xra_M;
         case BYTECODE_cmp:
