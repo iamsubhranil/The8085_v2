@@ -1,0 +1,7 @@
+mvi a, 47h
+adi 0b0h
+cm cmtest
+hlt
+cmtest:
+mvi a, 28h
+hlt

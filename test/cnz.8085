@@ -1,0 +1,7 @@
+mvi a, 39h
+ora a
+cnz cnztest
+hlt
+cnztest:
+mvi a, 0abh
+hlt

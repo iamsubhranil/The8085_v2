@@ -1,7 +1,8 @@
 start:
 mvi a, 00h
-adi 1h
-cpo end
-jmp start
+adi 3h
+cpe end
+hlt
 end:
+mvi a, 37h
 hlt

@@ -29,7 +29,7 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16
 
 #define TEST(name)                                      \
     testname = strdup(#name);                           \
-    phylw("\n[Test] ", "%s", #name);                    \
+    phylw("\n[Test] ", "%-4s", #name);                  \
     failed = false;                                     \
     reset_machine(&m, &memory[0], size);                \
     source = readFile("test/" #name ".8085");           \
@@ -241,4 +241,62 @@ void test_all(){
     EXPECT(flc, 0x01);
     EXPECT(sp, 0xffff - 3);
     DECIDE();
+
+    TEST(cnc);
+    EXPECT(ra, 0xcd);
+    EXPECT(flc, 0x00);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(cp);
+    EXPECT(ra, 0x74);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(cm);
+    EXPECT(ra, 0x28);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(cz);
+    EXPECT(ra, 0x00);
+    EXPECT(flz, 0x01);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(cnz);
+    EXPECT(ra, 0xab);
+    EXPECT(flz, 0x00);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(cpe);
+    EXPECT(ra, 0x37);
+    EXPECT(flp, 0x01);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(cpo);
+    EXPECT(ra, 0x43);
+    EXPECT(flp, 0x00);
+    EXPECT(sp, 0xffff - 3);
+    DECIDE();
+
+    TEST(ret);
+    EXPECT(ra, 0x82);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
+    TEST(rc);
+    EXPECT(ra, 0x87);
+    EXPECT(flc, 0x01);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
+    TEST(rnc);
+    EXPECT(ra, 0x37);
+    EXPECT(flc, 0x00);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
 }
