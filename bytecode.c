@@ -152,7 +152,9 @@ static disassembleFn disassembleTable[] = {
     dis_hex16_operand,      // BYTECODE_CNC
     dis_hex16_operand,      // BYTECODE_CNZ
     dis_hex16_operand,      // BYTECODE_CP
+    dis_hex16_operand,      // BYTECODE_CPE
     dis_hex8_operand,       // BYTECODE_CPI
+    dis_hex16_operand,      // BYTECODE_CPO
     dis_hex16_operand,      // BYTECODE_CZ
 
     dis_no_operand,         // BYTECODE_DAA
@@ -172,6 +174,8 @@ static disassembleFn disassembleTable[] = {
     dis_hex16_operand,      // BYTECODE_JNC
     dis_hex16_operand,      // BYTECODE_JNZ
     dis_hex16_operand,      // BYTECODE_JP
+    dis_hex16_operand,      // BYTECODE_JPE
+    dis_hex16_operand,      // BYTECODE_JPO
     dis_hex16_operand,      // BYTECODE_JZ   
     
     dis_hex16_operand,      // BYTECODE_LDA
@@ -201,6 +205,8 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // BYTECODE_RNC
     dis_no_operand,         // BYTECODE_RNZ
     dis_no_operand,         // BYTECODE_RP
+    dis_no_operand,         // BYTECODE_RPE
+    dis_no_operand,         // BYTECODE_RPO
     dis_no_operand,         // BYTECODE_RRC
     dis_no_operand,         // BYTECODE_RZ
    

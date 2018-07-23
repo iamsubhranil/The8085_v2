@@ -1,0 +1,7 @@
+start:
+mvi a, 00h
+adi 0h
+cpe end
+jmp start
+end:
+hlt

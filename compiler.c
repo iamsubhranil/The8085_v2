@@ -580,7 +580,9 @@ static compilerFn compilationTable[] = {
     compile_hex16_operand,      // TOKEN_CNC
     compile_hex16_operand,      // TOKEN_CNZ
     compile_hex16_operand,      // TOKEN_CP
+    compile_hex16_operand,      // TOKEN_CPE
     compile_hex8_operand,       // TOKEN_CPI
+    compile_hex16_operand,      // TOKEN_CPO
     compile_hex16_operand,      // TOKEN_CZ
 
     compile_no_operand,         // TOKEN_DAA
@@ -600,6 +602,8 @@ static compilerFn compilationTable[] = {
     compile_hex16_operand,      // TOKEN_JNC
     compile_hex16_operand,      // TOKEN_JNZ
     compile_hex16_operand,      // TOKEN_JP
+    compile_hex16_operand,      // TOKEN_JPE
+    compile_hex16_operand,      // TOKEN_JPO
     compile_hex16_operand,      // TOKEN_JZ   
     
     compile_hex16_operand,      // TOKEN_LDA
@@ -629,6 +633,8 @@ static compilerFn compilationTable[] = {
     compile_no_operand,         // TOKEN_RNC
     compile_no_operand,         // TOKEN_RNZ
     compile_no_operand,         // TOKEN_RP
+    compile_no_operand,         // TOKEN_RPE
+    compile_no_operand,         // TOKEN_RPO
     compile_no_operand,         // TOKEN_RRC
     compile_no_operand,         // TOKEN_RZ
    

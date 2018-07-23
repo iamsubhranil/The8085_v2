@@ -519,6 +519,14 @@ void run(Machine *m, u8 *memory){
                 {
                     JMP_ON(!GET_FLAG(FLG_S));
                 }
+            case BYTECODE_jpe:
+                {
+                    JMP_ON(GET_FLAG(FLG_P));
+                }
+            case BYTECODE_jpo:
+                {
+                    JMP_ON(!GET_FLAG(FLG_P));
+                }
             case BYTECODE_jm:
                 {
                     JMP_ON(GET_FLAG(FLG_S));
@@ -551,6 +559,14 @@ void run(Machine *m, u8 *memory){
                 {
                     CALL_ON(!GET_FLAG(FLG_S));
                 }
+            case BYTECODE_cpe:
+                {
+                    CALL_ON(GET_FLAG(FLG_P));
+                }
+            case BYTECODE_cpo:
+                {
+                    CALL_ON(!GET_FLAG(FLG_P));
+                }
             case BYTECODE_ret:
                 {
                     RET_ON(1);
@@ -578,6 +594,14 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_rp:
                 {
                     RET_ON(!GET_FLAG(FLG_S));
+                }
+            case BYTECODE_rpe:
+                {
+                    RET_ON(GET_FLAG(FLG_P));
+                }
+            case BYTECODE_rpo:
+                {
+                    RET_ON(!GET_FLAG(FLG_P));
                 }
             case BYTECODE_in:
                 {
