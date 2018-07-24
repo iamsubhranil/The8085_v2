@@ -1,0 +1,16 @@
+mvi a, 0ffh
+loop1:
+dcr a
+jz end
+mvi b, 0ffh
+loop2:
+dcr b
+jz loop1
+mvi c, 0ffh
+loop3:
+dcr c
+jz loop2
+jmp loop3
+end:
+hlt
+
