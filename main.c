@@ -20,6 +20,7 @@ int main(int argc, char *argv[]){
     u16 *p = &pointer;
 
     test_all(); 
+    compiler_reset();
 
     if(argc == 1){
         perr("Usage : %s file_name\n", argv[0]);
