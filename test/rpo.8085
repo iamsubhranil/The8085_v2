@@ -1,8 +1,7 @@
+mvi a, 01h
 call func
 hlt
 
 func:
-mvi a, 01h
 adi 1h
 rpo
-call func

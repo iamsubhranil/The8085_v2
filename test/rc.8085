@@ -1,0 +1,8 @@
+mvi a, 93h
+call rctest
+mvi a, 87h
+hlt
+
+rctest:
+adi 96h
+rc

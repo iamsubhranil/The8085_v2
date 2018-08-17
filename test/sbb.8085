@@ -1,7 +1,9 @@
-mvi a, 37h
-mvi b, 3fh
-cmc
-sbb b
-lxi h, 0ffh
-sbb m
+mvi a, 37h      // 0011 0111                 0011 0111
+mvi b, 3fh      // 0011 1111
+cmc             // 0000 0001 -> 0100 0000 -> 1100 0000
+sbb b           //                           1111 0111 (no borrow, hence ans is -ve)
+mov b, a
+lxi h, 1010h
+mvi m, 0ffh     // 1111 1111 -> 0000 0000 -> 0000 0000
+sbb m           //                           1111 0111 (no borrow, hence ans is -ve)
 hlt

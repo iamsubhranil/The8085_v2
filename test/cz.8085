@@ -1,0 +1,6 @@
+mvi a, 72h
+xra a
+cz cztest
+hlt
+cztest:
+hlt

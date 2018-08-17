@@ -1,0 +1,17 @@
+mvi a, 43h
+inr a       // 0x44
+mvi b, 29h
+inr b       // 0x2a
+mvi c, 32h
+inr c       // 0x33
+mvi d, 75h
+inr d       // 0x76
+mvi e, 48h
+inr e       // 0x49
+mvi h, 38h
+inr h       // 0x39
+mvi l, 19h
+inr l       // 0x1a
+mvi m, 47h
+inr m       // 0x48
+hlt

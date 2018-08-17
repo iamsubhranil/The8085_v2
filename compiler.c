@@ -197,6 +197,8 @@ static Bytecode get_m_version_of(Bytecode code){
             return BYTECODE_sub_M;
         case BYTECODE_ana:
             return BYTECODE_ana_M;
+        case BYTECODE_ora:
+            return BYTECODE_ora_M;
         case BYTECODE_xra:
             return BYTECODE_xra_M;
         case BYTECODE_cmp:
@@ -677,6 +679,19 @@ CompilationStatus patch_labels(){
     }
     *offset = bak;
     return ret;
+}
+
+// Reset the internal states of the compiler
+void compiler_reset(){
+    labelPointer = 0;
+    pendingPointer = 0;
+
+    memory = NULL;
+    offset = NULL;
+    memSize = 0;
+
+    presentToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
+    previousToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
 }
 
 // The driver

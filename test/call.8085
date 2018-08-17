@@ -1,0 +1,6 @@
+mvi a, 35h
+call func
+
+func:
+inr a
+hlt

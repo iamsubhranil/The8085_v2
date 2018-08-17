@@ -1,0 +1,7 @@
+mvi a, 0ffh
+sui 0ffh
+cp cptest
+hlt
+cptest:
+mvi a, 74h
+hlt

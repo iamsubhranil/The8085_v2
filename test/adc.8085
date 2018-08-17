@@ -1,7 +1,8 @@
-mvi a, 0ffh
-mvi b, 54h
-adc b
+mvi a, 0ffh     // 1111 1111
+mvi b, 54h      // 0101 0100
+adc b           // 0101 0011 (carry 1)
+mov b, a
 lxi h, 1010h
-mvi m, 67h
-adc m
+mvi m, 67h      // 0110 0111
+adc m           // 1011 1011 (carry 0)
 hlt
