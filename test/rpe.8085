@@ -1,8 +1,7 @@
+mvi a, 02h
 call func
 hlt
 
 func:
-mvi a, 00h
 adi 03h
 rpe
-call func

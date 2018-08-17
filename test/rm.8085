@@ -1,0 +1,7 @@
+mvi a, 04h
+call rmtest
+hlt
+
+rmtest:
+adi 7ch
+rm

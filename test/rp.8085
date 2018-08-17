@@ -1,0 +1,8 @@
+mvi a, 9h
+call rptest
+hlt
+
+rptest:
+adi 76h
+rp
+

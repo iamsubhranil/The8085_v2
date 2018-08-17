@@ -20,7 +20,7 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16
     CompilationStatus status;
     compiler_reset();
     if((status = compile(source, &memory[0], size, &pointer)) != COMPILE_OK){
-        pred("[compilation aborted with code %d]", status);
+        pred("\n[compilation aborted with code %d]", status);
         return false;
     }
     run(m, &memory[0]);
@@ -28,8 +28,10 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16
 }
 
 #define TEST(name)                                      \
+    total_count++;                                      \
     testname = strdup(#name);                           \
-    phylw("\n[Test] ", "%-4s", #name);                  \
+    printf("\r%*.s", 50, " ");                          \
+    phylw("\r[Test] ", "%-4s", #name);                  \
     failed = false;                                     \
     reset_machine(&m, &memory[0], size);                \
     source = readFile("test/" #name ".8085");           \
@@ -41,17 +43,30 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16
 #define EXPECT(target, value)                                                   \
     if(target != value){                                                        \
         pred("\n[Test:%s] ", testname);                                         \
-        printf(#target " -> expected : 0x%x, received : 0x%x", value, target);  \
+        printf(#target " -> expected : 0x%x, received : 0x%x\n", value, target);\
         failed = true;                                                          \
     }
 
 #define DECIDE()            \
     free(source);           \
     free(testname);         \
-    if(failed)              \
+    if(failed){             \
         pred(" [failed]");  \
-    else                    \
-        pgrn(" [passed]");
+        fail_count++;       \
+    }                       \
+    else{                   \
+        pgrn(" [passed]");  \
+        pass_count++;       \
+    }
+
+#define SHOW_STAT()                                         \
+    pylw("\r[Test] ");                                      \
+    printf("Total %" PRIu8 " tests done", total_count);     \
+    printf(" [Passed : ");                                  \
+    pgrn("%" PRIu8, pass_count);                            \
+    printf(", Failed : ");                                  \
+    pred("%" PRIu8, fail_count);                            \
+    printf("]");
 
 #define reg(r)  m.registers[r]
 #define ra      reg(REG_A)
@@ -79,6 +94,7 @@ void test_all(){
     char *source  = NULL;
     bool failed = false;
     char *testname = NULL;
+    u8 total_count = 0, pass_count = 0, fail_count = 0;
 
     // All tests are sorted in the order of dependency
 
@@ -299,4 +315,41 @@ void test_all(){
     EXPECT(sp, 0xfffe);
     DECIDE();
 
+    TEST(rpe);
+    EXPECT(ra, 0x05);
+    EXPECT(flp, 0x01);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
+    TEST(rpo);
+    EXPECT(ra, 0x02);
+    EXPECT(flp, 0x00);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
+    TEST(rz);
+    EXPECT(ra, 0x00);
+    EXPECT(flz, 0x01);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
+    TEST(rnz);
+    EXPECT(ra, 0xbf);
+    EXPECT(flz, 0x00);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
+    TEST(rp);
+    EXPECT(ra, 0x7f);
+    EXPECT(fls, 0x00);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+
+    TEST(rm);
+    EXPECT(ra, 0x80);
+    EXPECT(fls, 0x01);
+    EXPECT(sp, 0xfffe);
+    DECIDE();
+    
+    SHOW_STAT();
 }
