@@ -1,0 +1,7 @@
+mvi a, 83h
+call rnztest
+hlt
+
+rnztest:
+adi 3ch
+rnz

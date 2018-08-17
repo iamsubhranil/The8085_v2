@@ -1,0 +1,8 @@
+start:
+mvi a, 00h
+adi 3h
+cpe end
+hlt
+end:
+mvi a, 37h
+hlt

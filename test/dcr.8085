@@ -1,0 +1,17 @@
+mvi a, 43h
+dcr a       // 0x42
+mvi b, 28h
+dcr b       // 0x27
+mvi c, 83h
+dcr c       // 0x82
+mvi d, 84h
+dcr d       // 0x83
+mvi e, 23h
+dcr e       // 0x22
+mvi h, 94h
+dcr h       // 0x93
+mvi l, 0h
+dcr l       // 0xff
+mvi m, 83h
+dcr m       // 0x82
+hlt

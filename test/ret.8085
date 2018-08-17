@@ -1,0 +1,8 @@
+mvi a, 37h
+call func
+mvi a, 82h
+hlt
+
+func:
+mvi a, 74h
+ret

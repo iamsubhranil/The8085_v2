@@ -1,0 +1,7 @@
+mvi a, 63h
+adi 12h
+cnc cnctest
+hlt
+cnctest:
+mvi a, 0cdh
+hlt

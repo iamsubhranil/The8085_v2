@@ -1,0 +1,8 @@
+mvi a, 74h
+call rnctest
+mvi a, 37h
+hlt
+
+rnctest:
+adi 55h
+rnc

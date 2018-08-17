@@ -1,0 +1,8 @@
+mvi a, 18h  // 0001 1000
+mvi b, 29h  // 0010 1001
+add b       // 0100 0001 (no carry)
+mov b, a
+lxi h, 1010h
+mvi m, 60h  // 0110 0000
+add m       // 1010 0001
+hlt

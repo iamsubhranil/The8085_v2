@@ -1,0 +1,18 @@
+// Input 1  <-- c000
+// Input 2  <-- c001
+// Sum      --> c002
+// Carry    --> c003
+lxi h, 0c000h
+mov b, m
+inx h
+mov a, m
+mvi d, 00h
+add b
+jnc l1
+inr d
+l1:
+inx h
+mov m, a
+inx h
+mov m, d
+hlt

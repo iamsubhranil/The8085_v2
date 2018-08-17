@@ -1,0 +1,7 @@
+mvi a, 01h
+call func
+hlt
+
+func:
+adi 1h
+rpo

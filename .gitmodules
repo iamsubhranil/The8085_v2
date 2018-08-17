@@ -1,0 +1,3 @@
+[submodule "Cell"]
+	path = Cell
+	url = https://gitlab.com/iamsubhranil/Cell.git

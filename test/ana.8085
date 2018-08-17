@@ -1,0 +1,8 @@
+mvi a, 0abh // 1010 1011
+mvi b, 0cdh // 1100 1101
+ana b       // 1000 1001
+mov b, a
+lxi h, 1010h
+mvi m, 29h  // 0010 1001
+ana m       // 0000 1001
+hlt

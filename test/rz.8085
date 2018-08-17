@@ -1,0 +1,8 @@
+mvi a, 02h
+call rztest
+hlt
+
+rztest:
+mvi b, 02h
+sub b
+rz

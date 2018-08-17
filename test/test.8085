@@ -1,27 +1,27 @@
 // Load data in memory
-lxi h, 1010h
+lxi h, var1
 mvi m, 01h
-mvi l, 12h
+lxi h, var2
 mvi m, 02h
-mvi l, 14h
+lxi h, var3
 mvi m, 03h
 
 // Pass arguments
-lxi b, 1010h    // item1
-lxi d, 1012h    // item2
+lxi b, var1    // item1
+lxi d, var2    // item2
 call sort
 
-lxi b, 1010h    // item1
-lxi d, 1014h    // item3
+lxi b, var1    // item1
+lxi d, var3    // item3
 call sort
 
-lxi b, 1012h    // item2
-lxi d, 1014h    // item3
+lxi b, var2    // item2
+lxi d, var3    // item3
 call sort
 
-lxi b, 1010h
-lxi d, 1012h
-lxi h, 1014h
+lxi b, var1
+lxi d, var2
+lxi h, var3
 
 ldax b
 out
@@ -54,3 +54,10 @@ mov l, c    //          ""
 mov m, d    // Store the arg2 to the address of arg1
 mov d, a    // Restore the address to d
 ret
+
+var1:
+nop
+var2:
+nop
+var3:
+nop

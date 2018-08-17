@@ -35,35 +35,31 @@ void run(Machine *m, u8 *memory){
     
     #define SET_FLAG(x)         (m->registers[REG_FL] |= (1 << x))
     #define RESET_FLAG(x)       (m->registers[REG_FL] &= ~(1 << x))
-   
-    #define INIT_FLG_C(res)     \
-        if(res > 0xff)          \
-            SET_FLAG(FLG_C);    \
-        else                    \
-            RESET_FLAG(FLG_C);
+    #define CHANGE_FLAG(f, b)   (m->registers[REG_FL] ^= (-(unsigned long)(b) ^ m->registers[REG_FL]) & (1UL << f))
 
-    #define INIT_FLG_Z(res)     \
-        if((res & 0xff) == 0)   \
-            SET_FLAG(FLG_Z);    \
-        else                    \
-            RESET_FLAG(FLG_Z);
+    #define INIT_FLG_C(res)                                             \
+        CHANGE_FLAG(FLG_C, (res > 0xff));
 
-    #define INIT_FLG_S(res)     \
-        if((res >> 7) & 1)      \
-            SET_FLAG(FLG_S);    \
-        else                    \
-            RESET_FLAG(FLG_S);
+    #define INIT_FLG_Z(res)                                             \
+        CHANGE_FLAG(FLG_Z, ((res & 0xff) == 0));
+
+    #define INIT_FLG_S(res)                                             \
+        CHANGE_FLAG(FLG_S, ((res >> 7) & 1));
+
+    #define INIT_FLG_A(x, y)                                            \
+        CHANGE_FLAG(FLG_A, (((x) & 0x00ff) + ((y) & 0x00ff) > 0x00ff))
+
+    #define INIT_FLG_P(res)                                                 \
+        u8 temp = res & 0xff;                                               \
+        temp = temp - (temp >> 1) - (temp >> 2) - (temp >> 3)               \
+                - (temp >> 4) - (temp >> 5) - (temp >> 6) - (temp >> 7);    \
+        CHANGE_FLAG(FLG_P, !(temp & 1));
 
     #define INIT_FLAGS(res)     \
         INIT_FLG_C(res)         \
         INIT_FLG_Z(res)         \
-        INIT_FLG_S(res)
-
-    #define INIT_FLG_A(x, y)                            \
-        if(((x) & 0x00ff) + ((y) & 0x00ff) > 0x00ff)    \
-            SET_FLAG(FLG_A);                            \
-        else                                            \
-            RESET_FLAG(FLG_A);
+        INIT_FLG_S(res)         \
+        INIT_FLG_P(res)
 
     #define ADD()                                           \
         u16 res = with + m->registers[REG_A];               \
@@ -77,22 +73,21 @@ void run(Machine *m, u8 *memory){
         INIT_FLG_A(with1 + with2, m->registers[REG_A]);     \
         m->registers[REG_A] = res & 0xff;
    
-    #define SUB()               \
-        u8 with = ~by + 1;      \
-        ADD();                  \
-        if(GET_FLAG(FLG_C))     \
-            RESET_FLAG(FLG_C);  \
-        else                    \
-            SET_FLAG(FLG_C);
+    #define SUB()                           \
+        u8 with = ~by + 1;                  \
+        ADD();                              \
+        CHANGE_FLAG(FLG_C, !GET_FLAG(FLG_C))
 
-    #define LOGICAL(op)   \
+    #define LOGICAL(op)                                     \
         m->registers[REG_A] = m->registers[REG_A] op with;
 
     #define LOGICAL_NOT_CMA(op)         \
         LOGICAL(op)                     \
         RESET_FLAG(FLG_C);              \
+        RESET_FLAG(FLG_A);              \
         INIT_FLG_S(m->registers[REG_A]) \
-        INIT_FLG_Z(m->registers[REG_A])
+        INIT_FLG_Z(m->registers[REG_A]) \
+        INIT_FLG_P(m->registers[REG_A]) \
 
     #define JMP_ON(cond)            \
         u16 addr = NEXT_DWORD();    \
@@ -127,8 +122,8 @@ void run(Machine *m, u8 *memory){
     
     Bytecode opcode;
     while((opcode = (Bytecode)NEXT_BYTE()) != BYTECODE_hlt){
-        printf("\n");
-        bytecode_disassemble_in_context(memory, m->pc - 1, m);
+        //printf("\n");
+        //bytecode_disassemble_in_context(memory, m->pc - 1, m);
         switch(opcode){
             case BYTECODE_mov:
                 {
@@ -250,6 +245,8 @@ void run(Machine *m, u8 *memory){
                     u16 res = m->registers[reg] + 1;
                     INIT_FLG_S(res);
                     INIT_FLG_Z(res);
+                    INIT_FLG_P(res);
+                    INIT_FLG_A(m->registers[reg], 1);
                     m->registers[reg] = res & 0xff;
                     break;
                 }
@@ -258,6 +255,8 @@ void run(Machine *m, u8 *memory){
                     u16 res = memory[FROM_HL()] + 1;
                     INIT_FLG_S(res);
                     INIT_FLG_Z(res);
+                    INIT_FLG_P(res);
+                    INIT_FLG_A(memory[FROM_HL()], 1);
                     memory[FROM_HL()] = res & 0xff;
                     break;
                 }
@@ -340,6 +339,8 @@ void run(Machine *m, u8 *memory){
                     u16 res = m->registers[reg] - 1;
                     INIT_FLG_S(res);
                     INIT_FLG_Z(res);
+                    INIT_FLG_P(res);
+                    INIT_FLG_A(m->registers[reg], -1);
                     m->registers[reg] = res & 0xff;
                     break;
                 }
@@ -348,6 +349,8 @@ void run(Machine *m, u8 *memory){
                     u16 res = memory[FROM_HL()] - 1;
                     INIT_FLG_S(res);
                     INIT_FLG_Z(res);
+                    INIT_FLG_P(res);
+                    INIT_FLG_A(memory[FROM_HL()], -1);
                     memory[FROM_HL()] = res & 0xff;
                     break;
                 }
@@ -411,7 +414,7 @@ void run(Machine *m, u8 *memory){
                 }
             case BYTECODE_xra_M:
                 {
-                    u8 with = m->registers[NEXT_BYTE()];
+                    u8 with = memory[FROM_HL()];
                     LOGICAL_NOT_CMA(^);
                     break;
                 }
@@ -428,10 +431,7 @@ void run(Machine *m, u8 *memory){
                 }
             case BYTECODE_cmc:
                 {
-                    if(GET_FLAG(FLG_C))
-                        RESET_FLAG(FLG_C);
-                    else
-                        SET_FLAG(FLG_C);
+                    CHANGE_FLAG(FLG_C, !(GET_FLAG(FLG_C)));
                     break;
                 }
             case BYTECODE_cmp:
@@ -461,7 +461,7 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_rlc:
                 {
                     u8 d7 = m->registers[REG_A] >> 7;
-                    m->registers[REG_FL] |= (d7 << FLG_C); // Set/reset the carry
+                    CHANGE_FLAG(FLG_C, d7); // Set/reset the carry
                     m->registers[REG_A] <<= 1;
                     m->registers[REG_A] |= d7;
                     break;
@@ -470,7 +470,7 @@ void run(Machine *m, u8 *memory){
                 {
                     u8 d7 = m->registers[REG_A] >> 7;
                     u8 d0 = GET_FLAG(FLG_C);
-                    m->registers[REG_FL] |= (d7 << FLG_C); // Set/reset the carry
+                    CHANGE_FLAG(FLG_C, d7); // Set/reset the carry
                     m->registers[REG_A] <<= 1;
                     m->registers[REG_A] |= d0;
                     break;
@@ -478,7 +478,7 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_rrc:
                 {
                     u8 d0 = m->registers[REG_A] & 1;
-                    m->registers[REG_FL] |= (d0 << FLG_C); // Set/reset the carry
+                    CHANGE_FLAG(FLG_C, d0); // Set/reset the carry
                     m->registers[REG_A] >>= 1;
                     m->registers[REG_A] |= (d0 << 7);
                     break;
@@ -487,7 +487,7 @@ void run(Machine *m, u8 *memory){
                 {
                     u8 d0 = m->registers[REG_A] & 1;
                     u8 d7 = GET_FLAG(FLG_C);
-                    m->registers[REG_FL] |= (d0 << FLG_C); // Set/reset the carry
+                    CHANGE_FLAG(FLG_C, d0); // Set/reset the carry
                     m->registers[REG_A] >>= 1;
                     m->registers[REG_A] |= (d7 << 7);
                     break;
@@ -515,6 +515,14 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_jp:
                 {
                     JMP_ON(!GET_FLAG(FLG_S));
+                }
+            case BYTECODE_jpe:
+                {
+                    JMP_ON(GET_FLAG(FLG_P));
+                }
+            case BYTECODE_jpo:
+                {
+                    JMP_ON(!GET_FLAG(FLG_P));
                 }
             case BYTECODE_jm:
                 {
@@ -548,6 +556,14 @@ void run(Machine *m, u8 *memory){
                 {
                     CALL_ON(!GET_FLAG(FLG_S));
                 }
+            case BYTECODE_cpe:
+                {
+                    CALL_ON(GET_FLAG(FLG_P));
+                }
+            case BYTECODE_cpo:
+                {
+                    CALL_ON(!GET_FLAG(FLG_P));
+                }
             case BYTECODE_ret:
                 {
                     RET_ON(1);
@@ -575,6 +591,14 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_rp:
                 {
                     RET_ON(!GET_FLAG(FLG_S));
+                }
+            case BYTECODE_rpe:
+                {
+                    RET_ON(GET_FLAG(FLG_P));
+                }
+            case BYTECODE_rpo:
+                {
+                    RET_ON(!GET_FLAG(FLG_P));
                 }
             case BYTECODE_in:
                 {
@@ -670,6 +694,6 @@ void run(Machine *m, u8 *memory){
             default:
                 break;
         }
-        print_machine(m);
+        //print_machine(m);
     }
 }

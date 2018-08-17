@@ -1,0 +1,9 @@
+mvi a, 63h
+adi 0f0h
+cc cctest
+hlt
+
+cctest:
+mvi a, 0abh
+stc
+hlt

@@ -3,6 +3,10 @@
 #include "bytecode.h"
 #include "display.h"
 
+// Table containing strings corresponding
+// to each bytecode. 
+// Extra strings for the unambiguous
+// instructions of the vm.
 static const char* bytecode_strings[] = {
     #define INSTRUCTION(name, length)   #name,
     #include "instruction.h"
@@ -29,12 +33,14 @@ static const char* bytecode_strings[] = {
     "sbb   m",
 };
 
+// Returns the string corresponding to
+// a bytecode
 const char* bytecode_get_string(Bytecode code){
     return bytecode_strings[code];
 }
 
-typedef void (*disassembleFn)(u8 *memory, u16 *pointer);
-
+// Prints the register character
+// corresponding to a register id
 static void print_reg(u8 *memory, u16 *pointer){
     char reg = 'X';
     switch(memory[*pointer]){
@@ -60,27 +66,45 @@ static void print_reg(u8 *memory, u16 *pointer){
             reg =  'l';
             break;
     }
-    pgrn(" %c", reg);
+    if(reg == 'X')
+        pred(ANSI_FONT_BOLD " X");
+    else
+        pgrn(" %c", reg);
     (*pointer)++;
 }
 
-static void dis_reg(u8 *memory, u16 *pointer){
-    print_reg(memory, pointer);
-}
+// Function type which disassembles an instruction
+// at present pointer in memory
+typedef void (*disassembleFn)(u8 *memory, u16 *pointer);
 
+// Disassemble an instruction containing no
+// operands
 static void dis_no_operand(u8 *memory, u16 *pointer){
     (void)memory; (void)pointer;
 }
 
+// Disassemble an instruction containing one
+// register as the operand
+static void dis_reg(u8 *memory, u16 *pointer){
+    print_reg(memory, pointer);
+}
+
+// Disassemble an instruction containing one
+// immediate 8 bit operand
 static void dis_hex8_operand(u8 *memory, u16 *pointer){
     pylw(" %xh", memory[*pointer]);
     (*pointer)++;
 }
 
+// Disassemble an instruction containing one
+// immediate 16 bit operand
 static void dis_hex16_operand(u8 *memory, u16 *pointer){
     pylw(" %x%xh", memory[*pointer + 1], memory[*pointer]);
     (*pointer) += 2;
 }
+
+// Special disassembly functions for some
+// instructions
 
 static void dis_mov(u8 *memory, u16 *pointer){
     print_reg(memory, pointer);
@@ -102,113 +126,129 @@ static void dis_mvi(u8 *memory, u16 *pointer){
     (*pointer) += 1;
 }
 
+// Table which correspond one vm opcode to
+// a disassembly function.
+// Note that we're not talking about
+// 8085 opcode, we're talking about the
+// opcodes of our vm, so we also have to
+// include those "special" unambiguous
+// opcodes.
 static disassembleFn disassembleTable[] = {
 
     // Keywords.
-    dis_hex8_operand,       // TOKEN_ACI
-    dis_reg,                // TOKEN_ADC
-    dis_reg,         // TOKEN_ADD
-    dis_hex8_operand,       // TOKEN_ADDI
-    dis_reg,         // TOKEN_ANA
-    dis_hex8_operand,       // TOKEN_ANI
+    dis_hex8_operand,       // BYTECODE_ACI
+    dis_reg,                // BYTECODE_ADC
+    dis_reg,                // BYTECODE_ADD
+    dis_hex8_operand,       // BYTECODE_ADDI
+    dis_reg,                // BYTECODE_ANA
+    dis_hex8_operand,       // BYTECODE_ANI
     
-    dis_hex16_operand,      // TOKEN_CALL
-    dis_hex16_operand,      // TOKEN_CC
-    dis_hex16_operand,      // TOKEN_CM
-    dis_no_operand,         // TOKEN_CMA
-    dis_no_operand,         // TOKEN_CMC
-    dis_reg,         // TOKEN_CMP
-    dis_hex16_operand,      // TOKEN_CNC
-    dis_hex16_operand,      // TOKEN_CNZ
-    dis_hex16_operand,      // TOKEN_CP
-    dis_hex8_operand,       // TOKEN_CPI
-    dis_hex16_operand,      // TOKEN_CZ
+    dis_hex16_operand,      // BYTECODE_CALL
+    dis_hex16_operand,      // BYTECODE_CC
+    dis_hex16_operand,      // BYTECODE_CM
+    dis_no_operand,         // BYTECODE_CMA
+    dis_no_operand,         // BYTECODE_CMC
+    dis_reg,                // BYTECODE_CMP
+    dis_hex16_operand,      // BYTECODE_CNC
+    dis_hex16_operand,      // BYTECODE_CNZ
+    dis_hex16_operand,      // BYTECODE_CP
+    dis_hex16_operand,      // BYTECODE_CPE
+    dis_hex8_operand,       // BYTECODE_CPI
+    dis_hex16_operand,      // BYTECODE_CPO
+    dis_hex16_operand,      // BYTECODE_CZ
 
-    dis_no_operand,         // TOKEN_DAA
-    dis_reg,                // TOKEN_DAD
-    dis_reg,         // TOKEN_DCR
-    dis_reg,      // TOKEN_DCX
+    dis_no_operand,         // BYTECODE_DAA
+    dis_reg,                // BYTECODE_DAD
+    dis_reg,                // BYTECODE_DCR
+    dis_reg,                // BYTECODE_DCX
 
-    dis_no_operand,         // TOKEN_HLT
+    dis_no_operand,         // BYTECODE_HLT
     
-    dis_no_operand,         // TOKEN_IN
-    dis_reg,         // TOKEN_INR
-    dis_reg,      // TOKEN_INX
+    dis_no_operand,         // BYTECODE_IN
+    dis_reg,                // BYTECODE_INR
+    dis_reg,                // BYTECODE_INX
  
-    dis_hex16_operand,      // TOKEN_JC
-    dis_hex16_operand,      // TOKEN_JM
-    dis_hex16_operand,      // TOKEN_JMP
-    dis_hex16_operand,      // TOKEN_JNC
-    dis_hex16_operand,      // TOKEN_JNZ
-    dis_hex16_operand,      // TOKEN_JP
-    dis_hex16_operand,      // TOKEN_JZ   
+    dis_hex16_operand,      // BYTECODE_JC
+    dis_hex16_operand,      // BYTECODE_JM
+    dis_hex16_operand,      // BYTECODE_JMP
+    dis_hex16_operand,      // BYTECODE_JNC
+    dis_hex16_operand,      // BYTECODE_JNZ
+    dis_hex16_operand,      // BYTECODE_JP
+    dis_hex16_operand,      // BYTECODE_JPE
+    dis_hex16_operand,      // BYTECODE_JPO
+    dis_hex16_operand,      // BYTECODE_JZ   
     
-    dis_hex16_operand,      // TOKEN_LDA
-    dis_reg,                // TOKEN_LDAX
-    dis_hex16_operand,      // TOKEN_LHLD
-    dis_lxi,                // TOKEN_LXI
+    dis_hex16_operand,      // BYTECODE_LDA
+    dis_reg,                // BYTECODE_LDAX
+    dis_hex16_operand,      // BYTECODE_LHLD
+    dis_lxi,                // BYTECODE_LXI
     
-    dis_mov,                // TOKEN_MOV
-    dis_mvi,                // TOKEN_MVI
+    dis_mov,                // BYTECODE_MOV
+    dis_mvi,                // BYTECODE_MVI
     
-    dis_no_operand,         // TOKEN_NOP 
+    dis_no_operand,         // BYTECODE_NOP 
  
-    dis_reg,         // TOKEN_ORA
-    dis_hex8_operand,       // TOKEN_ORI
-    dis_no_operand,         // TOKEN_OUT   
+    dis_reg,                // BYTECODE_ORA
+    dis_hex8_operand,       // BYTECODE_ORI
+    dis_no_operand,         // BYTECODE_OUT   
    
-    dis_no_operand,         // TOKEN_PCHL
-    dis_reg,                // TOKEN_POP
-    dis_reg,                // TOKEN_PUSH
+    dis_no_operand,         // BYTECODE_PCHL
+    dis_reg,                // BYTECODE_POP
+    dis_reg,                // BYTECODE_PUSH
 
-    dis_no_operand,         // TOKEN_RAL
-    dis_no_operand,         // TOKEN_RAR
-    dis_no_operand,         // TOKEN_RC
-    dis_no_operand,         // TOKEN_RET
-    dis_no_operand,         // TOKEN_RLC
-    dis_no_operand,         // TOKEN_RM
-    dis_no_operand,         // TOKEN_RNC
-    dis_no_operand,         // TOKEN_RNZ
-    dis_no_operand,         // TOKEN_RP
-    dis_no_operand,         // TOKEN_RRC
-    dis_no_operand,         // TOKEN_RZ
+    dis_no_operand,         // BYTECODE_RAL
+    dis_no_operand,         // BYTECODE_RAR
+    dis_no_operand,         // BYTECODE_RC
+    dis_no_operand,         // BYTECODE_RET
+    dis_no_operand,         // BYTECODE_RLC
+    dis_no_operand,         // BYTECODE_RM
+    dis_no_operand,         // BYTECODE_RNC
+    dis_no_operand,         // BYTECODE_RNZ
+    dis_no_operand,         // BYTECODE_RP
+    dis_no_operand,         // BYTECODE_RPE
+    dis_no_operand,         // BYTECODE_RPO
+    dis_no_operand,         // BYTECODE_RRC
+    dis_no_operand,         // BYTECODE_RZ
    
-    dis_reg,                // TOKEN_SBB
-    dis_hex8_operand,       // TOKEN_SBI
-    dis_hex16_operand,      // TOKEN_SHLD
-    dis_no_operand,         // TOKEN_SPHL
-    dis_hex16_operand,      // TOKEN_STA
-    dis_reg,                // TOKEN_STAX
-    dis_no_operand,         // TOKEN_STC
-    dis_reg,                // TOKEN_SUB
-    dis_hex8_operand,       // TOKEN_SUI
+    dis_reg,                // BYTECODE_SBB
+    dis_hex8_operand,       // BYTECODE_SBI
+    dis_hex16_operand,      // BYTECODE_SHLD
+    dis_no_operand,         // BYTECODE_SPHL
+    dis_hex16_operand,      // BYTECODE_STA
+    dis_reg,                // BYTECODE_STAX
+    dis_no_operand,         // BYTECODE_STC
+    dis_reg,                // BYTECODE_SUB
+    dis_hex8_operand,       // BYTECODE_SUI
 
-    dis_no_operand,         // TOKEN_XCHG
-    dis_reg,                // TOKEN_XRA
-    dis_hex8_operand,       // TOKEN_XRI
-    dis_no_operand,         // TOKEN_XTHL
+    dis_no_operand,         // BYTECODE_XCHG
+    dis_reg,                // BYTECODE_XRA
+    dis_hex8_operand,       // BYTECODE_XRI
+    dis_no_operand,         // BYTECODE_XTHL
     
-    dis_hex16_operand,      // lxi_SP
-    dis_no_operand,         // dcx sp
-    dis_no_operand,         // inx sp
-    dis_reg,              // mov_r
-    dis_hex8_operand,       // mvi_m
-    dis_reg,                // mov_m
-    dis_no_operand,         // dcr m
-    dis_no_operand,         // inr m 
-    dis_no_operand,         // sub m
-    dis_no_operand,         // add m
-    dis_no_operand,         // ana m
-    dis_no_operand,         // xra m
-    dis_no_operand,         // ora m
-    dis_no_operand,         // cmp m
-    dis_no_operand,         // adc m
-    dis_no_operand,         // dad sp
-    dis_no_operand,         // pop psw
-    dis_no_operand,         // push psw
-    dis_no_operand,         // sbb m
+    dis_hex16_operand,      // BYTECODE_lxi_SP
+    dis_no_operand,         // BYTECODE_dcx_SP
+    dis_no_operand,         // BYTECODE_inx_SP
+    dis_reg,                // BYTECODE_mov_R
+    dis_hex8_operand,       // BYTECODE_mvi_M
+    dis_reg,                // BYTECODE_mov_M
+    dis_no_operand,         // BYTECODE_dcr_M
+    dis_no_operand,         // BYTECODE_inr_M 
+    dis_no_operand,         // BYTECODE_sub_M
+    dis_no_operand,         // BYTECODE_add_M
+    dis_no_operand,         // BYTECODE_ana_M
+    dis_no_operand,         // BYTECODE_xra_M
+    dis_no_operand,         // BYTECODE_ora_M
+    dis_no_operand,         // BYTECODE_cmp_M
+    dis_no_operand,         // BYTECODE_adc_M
+    dis_no_operand,         // BYTECODE_dad_SP
+    dis_no_operand,         // BYTECODE_pop_PSW
+    dis_no_operand,         // BYTECODE_push_PSW
+    dis_no_operand,         // BYTECODE_sbb_M
 };
 
+static siz dis_table_siz = sizeof(disassembleTable)/sizeof(disassembleFn);
+
+// Disassemble one instruction at the given offset
 void bytecode_disassemble(u8 *memory, u16 pointer){
     pred("\n%04x:\t", pointer);
     pblue("%-5s", bytecode_strings[memory[pointer]]);
@@ -216,8 +256,17 @@ void bytecode_disassemble(u8 *memory, u16 pointer){
     disassembleTable[memory[pointer - 1]](memory, &pointer);
 }
 
+// Disassemble one instruction at the given offset
+// in present execution context. This basically
+// shows some extra infos, like contents of the
+// memory location that HL points to, as
+// applicable to an instruction.
 void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
     pred("\n%04x:\t", pointer);
+    if(memory[pointer] > dis_table_siz){
+        pred( ANSI_FONT_BOLD "<invalid opcode>");
+        return;
+    }
     pblue("%-5s", bytecode_strings[memory[pointer]]);
     pointer++;
     Bytecode code = (Bytecode)memory[pointer - 1];
@@ -262,9 +311,16 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
     }
 }
 
+// Disassemble a whole chunk of bytecode until the
+// specified address 'upto'
 void bytecode_disassemble_chunk(u8 *memory, u16 pointer, u16 upto){
-    while(pointer < upto){
+    while(pointer <= upto){
         pred("\n%04x:\t", pointer);
+        if(memory[pointer] > dis_table_siz){
+            pred( ANSI_FONT_BOLD "<invalid opcode>");
+            pointer++;
+            continue;
+        }
         pblue("%-5s", bytecode_strings[memory[pointer]]);
         pointer++;
         disassembleTable[memory[pointer - 1]](memory, &pointer);

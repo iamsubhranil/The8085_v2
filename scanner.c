@@ -49,14 +49,6 @@ static char peekNext() {
     return scanner.current[1];
 }
 
-static bool match(char expected) {
-    if (isAtEnd()) return false;
-    if (*scanner.current != expected) return false;
-
-    scanner.current++;
-    return true;
-}
-
 static Token makeToken(TokenType type) {
     Token token;
     token.type = type;
@@ -124,16 +116,6 @@ static void skipWhitespace() {
                 return;
         }
     }
-}
-
-static TokenType checkKeyword(int start, int length,
-        const char* rest, TokenType type) {
-    if (scanner.current - scanner.start == start + length &&
-            memcmp(scanner.start + start, rest, length) == 0) {
-        return type;
-    }
-
-    return TOKEN_IDENTIFIER;
 }
 
 typedef struct{

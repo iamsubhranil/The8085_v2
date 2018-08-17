@@ -1,0 +1,9 @@
+mvi a, 5h
+mvi b, 2h
+mvi c, 6h
+mvi d, 9h
+mvi e, 0h
+mvi h, 10h
+mvi l, 10h
+mvi m, 0bah
+hlt

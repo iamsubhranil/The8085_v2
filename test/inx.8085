@@ -1,0 +1,7 @@
+lxi b, 2943h
+inx b       // 0x2944
+lxi h, 1819h
+inx h       // 0x181a
+lxi d, 13ffh
+inx d       // 0x1400
+hlt
