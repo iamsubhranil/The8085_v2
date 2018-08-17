@@ -39,6 +39,11 @@ static siz pendingPointer = 0;
 static u16 memSize = 0, *offset = NULL;
 static u8 *memory = NULL;
 
+// Since write_byte cannot directly return an
+// error code, it will denote memory full
+// by triggering this
+static u8 memory_full = 0;
+
 // Consumed tokens
 static Token presentToken = {}, previousToken = {};
 
@@ -53,6 +58,10 @@ typedef CompilationStatus (*compilerFn)(Token t);
 
 // Write a byte to the memory and manage the offset
 u16 write_byte(u8 value){
+    if(*offset >= memSize){
+        memory_full = 1;
+        return *offset;
+    }
     memory[*offset] = value;
     (*offset)++;
     return (*offset) - 1;
@@ -689,6 +698,7 @@ void compiler_reset(){
     memory = NULL;
     offset = NULL;
     memSize = 0;
+    memory_full = 0;
 
     presentToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
     previousToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
@@ -704,8 +714,11 @@ CompilationStatus compile(const char *source, u8 *mem, u16 size, u16 *off){
 
     Token t;
     CompilationStatus lastStatus = COMPILE_OK;
-    while((t = scanToken()).type != TOKEN_EOF && lastStatus == COMPILE_OK)
+    while((t = scanToken()).type != TOKEN_EOF && lastStatus == COMPILE_OK && !memory_full)
         lastStatus = compilationTable[t.type](t);
+
+    if(memory_full)
+        lastStatus = MEMORY_FULL;
 
     if(lastStatus == COMPILE_OK)
         return patch_labels();

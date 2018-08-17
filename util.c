@@ -9,7 +9,7 @@ char* readFile(const char* path) {
 
     if (file == NULL) {
         perr("Could not open file \"%s\".\n", path);
-        exit(74);
+        return NULL;
     }
 
     fseek(file, 0L, SEEK_END);
@@ -19,13 +19,13 @@ char* readFile(const char* path) {
     char* buffer = (char*)malloc(fileSize + 1);
     if (buffer == NULL) {
         perr("Not enough memory to read \"%s\".\n", path);
-        exit(74);
+        return NULL;
     }
 
     size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
     if (bytesRead < fileSize) {
         perr("Could not read file \"%s\".\n", path);
-        exit(74);
+        return NULL;
     } 
     buffer[bytesRead] = '\0';
 

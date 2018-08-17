@@ -246,6 +246,8 @@ static disassembleFn disassembleTable[] = {
     dis_no_operand,         // BYTECODE_sbb_M
 };
 
+static siz dis_table_siz = sizeof(disassembleTable)/sizeof(disassembleFn);
+
 // Disassemble one instruction at the given offset
 void bytecode_disassemble(u8 *memory, u16 pointer){
     pred("\n%04x:\t", pointer);
@@ -261,6 +263,10 @@ void bytecode_disassemble(u8 *memory, u16 pointer){
 // applicable to an instruction.
 void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
     pred("\n%04x:\t", pointer);
+    if(memory[pointer] > dis_table_siz){
+        pred( ANSI_FONT_BOLD "<invalid opcode>");
+        return;
+    }
     pblue("%-5s", bytecode_strings[memory[pointer]]);
     pointer++;
     Bytecode code = (Bytecode)memory[pointer - 1];
@@ -308,8 +314,13 @@ void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m){
 // Disassemble a whole chunk of bytecode until the
 // specified address 'upto'
 void bytecode_disassemble_chunk(u8 *memory, u16 pointer, u16 upto){
-    while(pointer < upto){
+    while(pointer <= upto){
         pred("\n%04x:\t", pointer);
+        if(memory[pointer] > dis_table_siz){
+            pred( ANSI_FONT_BOLD "<invalid opcode>");
+            pointer++;
+            continue;
+        }
         pblue("%-5s", bytecode_strings[memory[pointer]]);
         pointer++;
         disassembleTable[memory[pointer - 1]](memory, &pointer);
