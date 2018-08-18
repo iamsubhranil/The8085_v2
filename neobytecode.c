@@ -3,6 +3,7 @@
 #ifdef USE_NEOVM
 
 #include "display.h"
+#include <stdio.h>
 
 static u16 intrpointer = 0;
 
@@ -22,790 +23,1115 @@ void bytecode_disassemble(u8 *memory, u16 pointer){
     intrpointer = pointer + 1;
     u8 opcode = memory[pointer];
     pred("\n%x: ", pointer);
-    #define DECODE_BYTE()   pblue("%xh", memory[intrpointer++]);
-    #define DECODE_WORD()   pblue("%x%xh", memory[intrpointer + 1], memory[intrpointer]); intrpointer += 2;
-    switch(opcode){
+    #define DECODE_BYTE()   pylw("   %02xh", memory[intrpointer++]);
+    #define DECODE_WORD()   pylw(" %02x%02xh", memory[intrpointer + 1], memory[intrpointer]); intrpointer += 2;
+    switch(opcode){ 
         case 0xCE: 
-            pylw("aci ");
+			pblue("%5s\t", "aci");
             DECODE_BYTE();
             break;
         case 0x8F: 
-            pylw("adc a");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "a"); 
             break;
         case 0x88: 
-            pylw("adc b");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "b"); 
             break;
         case 0x89: 
-            pylw("adc c");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "c"); 
             break;
         case 0x8A: 
-            pylw("adc d");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "d"); 
             break;
         case 0x8B: 
-            pylw("adc e");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "e"); 
             break;
         case 0x8C: 
-            pylw("adc h");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "h"); 
             break;
         case 0x8D: 
-            pylw("adc l");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "l"); 
             break;
         case 0x8E: 
-            pylw("adc m");
+			pblue("%5s\t", "adc");
+			pgrn("%6s", "m"); 
             break;
         case 0x87: 
-            pylw("add a");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "a"); 
             break;
         case 0x80: 
-            pylw("add b");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "b"); 
             break;
         case 0x81: 
-            pylw("add c");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "c"); 
             break;
         case 0x82: 
-            pylw("add d");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "d"); 
             break;
         case 0x83: 
-            pylw("add e");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "e"); 
             break;
         case 0x84: 
-            pylw("add h");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "h"); 
             break;
         case 0x85: 
-            pylw("add l");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "l"); 
             break;
         case 0x86: 
-            pylw("add m");
+			pblue("%5s\t", "add");
+			pgrn("%6s", "m"); 
             break;
         case 0xC6: 
-            pylw("adi ");
+			pblue("%5s\t", "adi");
             DECODE_BYTE();
             break;
         case 0xA7: 
-            pylw("ana a");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "a"); 
             break;
         case 0xA0: 
-            pylw("ana b");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "b"); 
             break;
         case 0xA1: 
-            pylw("ana c");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "c"); 
             break;
         case 0xA2: 
-            pylw("ana d");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "d"); 
             break;
         case 0xA3: 
-            pylw("ana e");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "e"); 
             break;
         case 0xA4: 
-            pylw("ana h");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "h"); 
             break;
         case 0xA5: 
-            pylw("ana l");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "l"); 
             break;
         case 0xA6: 
-            pylw("ana m");
+			pblue("%5s\t", "ana");
+			pgrn("%6s", "m"); 
             break;
         case 0xE6: 
-            pylw("ani ");
+			pblue("%5s\t", "ani");
             DECODE_BYTE();
             break;
         case 0xCD: 
-            pylw("call ");
+			pblue("%5s\t", "call");
             DECODE_WORD();
             break;
         case 0xDC: 
-            pylw("cc ");
+			pblue("%5s\t", "cc");
             DECODE_WORD();
             break;
         case 0xFC: 
-            pylw("cm ");
+			pblue("%5s\t", "cm");
             DECODE_WORD();
             break;
         case 0x2F: 
-            pylw("cma");
+			pblue("%5s\t", "cma");
             break;
         case 0x3F: 
-            pylw("cmc");
+			pblue("%5s\t", "cmc");
             break;
         case 0xBF: 
-            pylw("cmp a");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "a"); 
             break;
         case 0xB8: 
-            pylw("cmp b");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "b"); 
             break;
         case 0xB9: 
-            pylw("cmp c");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "c"); 
             break;
         case 0xBA: 
-            pylw("cmp d");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "d"); 
             break;
         case 0xBB: 
-            pylw("cmp e");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "e"); 
             break;
         case 0xBC: 
-            pylw("cmp h");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "h"); 
             break;
         case 0xBD: 
-            pylw("cmp l");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "l"); 
             break;
         case 0xBE: 
-            pylw("cmp m");
+			pblue("%5s\t", "cmp");
+			pgrn("%6s", "m"); 
             break;
         case 0xD4: 
-            pylw("cnc ");
+			pblue("%5s\t", "cnc");
             DECODE_WORD();
             break;
         case 0xC4: 
-            pylw("cnz ");
+			pblue("%5s\t", "cnz");
             DECODE_WORD();
             break;
         case 0xF4: 
-            pylw("cp ");
+			pblue("%5s\t", "cp");
             DECODE_WORD();
             break;
         case 0xEC: 
-            pylw("cpe ");
+			pblue("%5s\t", "cpe");
             DECODE_WORD();
             break;
         case 0xFE: 
-            pylw("cpi ");
+			pblue("%5s\t", "cpi");
             DECODE_BYTE();
             break;
         case 0xE4: 
-            pylw("cpo ");
+			pblue("%5s\t", "cpo");
             DECODE_WORD();
             break;
         case 0xCC: 
-            pylw("cz ");
+			pblue("%5s\t", "cz");
             DECODE_WORD();
             break;
         case 0x27 : 
-            pylw("daa");
+			pblue("%5s\t", "daa");
             break;
         case 0x09: 
-            pylw("dad b");
+			pblue("%5s\t", "dad");
+			pgrn("%6s", "b"); 
             break;
         case 0x19: 
-            pylw("dad d");
+			pblue("%5s\t", "dad");
+			pgrn("%6s", "d"); 
             break;
         case 0x29: 
-            pylw("dad h");
+			pblue("%5s\t", "dad");
+			pgrn("%6s", "h"); 
             break;
         case 0x39: 
-            pylw("dad sp");
+			pblue("%5s\t", "dad");
+			pgrn("%6s", "sp"); 
             break;
         case 0x3D: 
-            pylw("dcr a");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "a"); 
             break;
         case 0x05: 
-            pylw("dcr b");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "b"); 
             break;
         case 0x0D: 
-            pylw("dcr c");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "c"); 
             break;
         case 0x15: 
-            pylw("dcr d");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "d"); 
             break;
         case 0x1D: 
-            pylw("dcr e");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "e"); 
             break;
         case 0x25: 
-            pylw("dcr h");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "h"); 
             break;
         case 0x2D: 
-            pylw("dcr l");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "l"); 
             break;
         case 0x35: 
-            pylw("dcr m");
+			pblue("%5s\t", "dcr");
+			pgrn("%6s", "m"); 
             break;
         case 0x0B: 
-            pylw("dcx b");
+			pblue("%5s\t", "dcx");
+			pgrn("%6s", "b"); 
             break;
         case 0x1B: 
-            pylw("dcx d");
+			pblue("%5s\t", "dcx");
+			pgrn("%6s", "d"); 
             break;
         case 0x2B: 
-            pylw("dcx h");
+			pblue("%5s\t", "dcx");
+			pgrn("%6s", "h"); 
             break;
         case 0x3B: 
-            pylw("dcx sp");
+			pblue("%5s\t", "dcx");
+			pgrn("%6s", "sp"); 
             break;
         case 0xF3: 
-            pylw("di");
+			pblue("%5s\t", "di");
             break;
         case 0xFB: 
-            pylw("ei");
+			pblue("%5s\t", "ei");
             break;
         case 0x76: 
-            pylw("hlt");
+			pblue("%5s\t", "hlt");
             break;
         case 0xDB: 
-            pylw("in ");
+			pblue("%5s\t", "in");
             DECODE_BYTE();
             break;
         case 0x3C: 
-            pylw("inr a");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "a"); 
             break;
         case 0x04: 
-            pylw("inr b");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "b"); 
             break;
         case 0x0C: 
-            pylw("inr c");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "c"); 
             break;
         case 0x14: 
-            pylw("inr d");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "d"); 
             break;
         case 0x1C: 
-            pylw("inr e");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "e"); 
             break;
         case 0x24: 
-            pylw("inr h");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "h"); 
             break;
         case 0x2C: 
-            pylw("inr l");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "l"); 
             break;
         case 0x34: 
-            pylw("inr m");
+			pblue("%5s\t", "inr");
+			pgrn("%6s", "m"); 
             break;
         case 0x03: 
-            pylw("inx b");
+			pblue("%5s\t", "inx");
+			pgrn("%6s", "b"); 
             break;
         case 0x13: 
-            pylw("inx d");
+			pblue("%5s\t", "inx");
+			pgrn("%6s", "d"); 
             break;
         case 0x23: 
-            pylw("inx h");
+			pblue("%5s\t", "inx");
+			pgrn("%6s", "h"); 
             break;
         case 0x33: 
-            pylw("inx sp");
+			pblue("%5s\t", "inx");
+			pgrn("%6s", "sp"); 
             break;
         case 0xDA: 
-            pylw("jc ");
+			pblue("%5s\t", "jc");
             DECODE_WORD();
             break;
         case 0xFA: 
-            pylw("jm ");
+			pblue("%5s\t", "jm");
             DECODE_WORD();
             break;
         case 0xC3: 
-            pylw("jmp ");
+			pblue("%5s\t", "jmp");
             DECODE_WORD();
             break;
         case 0xD2: 
-            pylw("jnc ");
+			pblue("%5s\t", "jnc");
             DECODE_WORD();
             break;
         case 0xC2: 
-            pylw("jnz ");
+			pblue("%5s\t", "jnz");
             DECODE_WORD();
             break;
         case 0xF2: 
-            pylw("jp ");
+			pblue("%5s\t", "jp");
             DECODE_WORD();
             break;
         case 0xEA: 
-            pylw("jpe ");
+			pblue("%5s\t", "jpe");
             DECODE_WORD();
             break;
         case 0xE2: 
-            pylw("jpo ");
+			pblue("%5s\t", "jpo");
             DECODE_WORD();
             break;
         case 0xCA: 
-            pylw("jz ");
+			pblue("%5s\t", "jz");
             DECODE_WORD();
             break;
         case 0x3A: 
-            pylw("lda ");
+			pblue("%5s\t", "lda");
             DECODE_WORD();
             break;
         case 0x0A: 
-            pylw("ldax b");
+			pblue("%5s\t", "ldax");
+			pgrn("%6s", "b"); 
             break;
         case 0x1A: 
-            pylw("ldax d");
+			pblue("%5s\t", "ldax");
+			pgrn("%6s", "d"); 
             break;
         case 0x2A: 
-            pylw("lhld ");
+			pblue("%5s\t", "lhld");
             DECODE_WORD();
             break;
         case 0x01: 
-            pylw("lxi b, ");
+			pblue("%5s\t", "lxi");
+			pgrn("%6s", "b");
+			printf(",");
             DECODE_WORD();
             break;
         case 0x11: 
-            pylw("lxi d, ");
+			pblue("%5s\t", "lxi");
+			pgrn("%6s", "d");
+			printf(",");
             DECODE_WORD();
             break;
         case 0x21: 
-            pylw("lxi h, ");
+			pblue("%5s\t", "lxi");
+			pgrn("%6s", "h");
+			printf(",");
             DECODE_WORD();
             break;
         case 0x31: 
-            pylw("lxi sp, ");
+			pblue("%5s\t", "lxi");
+			pgrn("%6s", "sp");
+			printf(",");
             DECODE_WORD();
             break;
         case 0x7F: 
-            pylw("mov a, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x78: 
-            pylw("mov a, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x79: 
-            pylw("mov a, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x7A: 
-            pylw("mov a, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x7B: 
-            pylw("mov a, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x7C: 
-            pylw("mov a, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x7D: 
-            pylw("mov a, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x7E: 
-            pylw("mov a, m");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "a");
+			printf(",");
+			pgrn("%6s", "m"); 
             break;
         case 0x47: 
-            pylw("mov b, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x40: 
-            pylw("mov b, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x41: 
-            pylw("mov b, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x42: 
-            pylw("mov b, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x43: 
-            pylw("mov b, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x44: 
-            pylw("mov b, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x45: 
-            pylw("mov b, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x46: 
-            pylw("mov b, m");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "b");
+			printf(",");
+			pgrn("%6s", "m"); 
             break;
         case 0x4F: 
-            pylw("mov c, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x48: 
-            pylw("mov c, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x49: 
-            pylw("mov c, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x4A: 
-            pylw("mov c, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x4B: 
-            pylw("mov c, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x4C: 
-            pylw("mov c, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x4D: 
-            pylw("mov c, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x4E: 
-            pylw("mov c, m");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "c");
+			printf(",");
+			pgrn("%6s", "m"); 
             break;
         case 0x57: 
-            pylw("mov d, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x50: 
-            pylw("mov d, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x51: 
-            pylw("mov d, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x52: 
-            pylw("mov d, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x53: 
-            pylw("mov d, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x54: 
-            pylw("mov d, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x55: 
-            pylw("mov d, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x56: 
-            pylw("mov d, m");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "d");
+			printf(",");
+			pgrn("%6s", "m"); 
             break;
         case 0x5F: 
-            pylw("mov e, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x58: 
-            pylw("mov e, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x59: 
-            pylw("mov e, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x5A: 
-            pylw("mov e, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x5B: 
-            pylw("mov e, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x5C: 
-            pylw("mov e, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x5D: 
-            pylw("mov e, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x5E: 
-            pylw("mov e, m");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "e");
+			printf(",");
+			pgrn("%6s", "m"); 
             break;
         case 0x67: 
-            pylw("mov h, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x60: 
-            pylw("mov h, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x61: 
-            pylw("mov h, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x62: 
-            pylw("mov h, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x63: 
-            pylw("mov h, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x64: 
-            pylw("mov h, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x65: 
-            pylw("mov h, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x66: 
-            pylw("mov h, m");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "h");
+			printf(",");
+			pgrn("%6s", "m"); 
             break;
         case 0x6F: 
-            pylw("mov l, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x68: 
-            pylw("mov l, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x69: 
-            pylw("mov l, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x6A: 
-            pylw("mov l, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x6B: 
-            pylw("mov l, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x6C: 
-            pylw("mov l, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x6D: 
-            pylw("mov l, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x6E: 
-            pylw("mov l, m");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "l");
+			printf(",");
+			pgrn("%6s", "m"); 
             break;
         case 0x77: 
-            pylw("mov m, a");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "m");
+			printf(",");
+			pgrn("%6s", "a"); 
             break;
         case 0x70: 
-            pylw("mov m, b");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "m");
+			printf(",");
+			pgrn("%6s", "b"); 
             break;
         case 0x71: 
-            pylw("mov m, c");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "m");
+			printf(",");
+			pgrn("%6s", "c"); 
             break;
         case 0x72: 
-            pylw("mov m, d");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "m");
+			printf(",");
+			pgrn("%6s", "d"); 
             break;
         case 0x73: 
-            pylw("mov m, e");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "m");
+			printf(",");
+			pgrn("%6s", "e"); 
             break;
         case 0x74: 
-            pylw("mov m, h");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "m");
+			printf(",");
+			pgrn("%6s", "h"); 
             break;
         case 0x75: 
-            pylw("mov m, l");
+			pblue("%5s\t", "mov");
+			pgrn("%6s", "m");
+			printf(",");
+			pgrn("%6s", "l"); 
             break;
         case 0x3E: 
-            pylw("mvi a, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "a");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x06: 
-            pylw("mvi b, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "b");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x0E: 
-            pylw("mvi c, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "c");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x16: 
-            pylw("mvi d, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "d");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x1E: 
-            pylw("mvi e, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "e");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x26: 
-            pylw("mvi h, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "h");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x2E: 
-            pylw("mvi l, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "l");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x36: 
-            pylw("mvi m, ");
+			pblue("%5s\t", "mvi");
+			pgrn("%6s", "m");
+			printf(",");
             DECODE_BYTE();
             break;
         case 0x00: 
-            pylw("nop");
+			pblue("%5s\t", "nop");
             break;
         case 0xB7: 
-            pylw("ora a");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "a"); 
             break;
         case 0xB0: 
-            pylw("ora b");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "b"); 
             break;
         case 0xB1: 
-            pylw("ora c");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "c"); 
             break;
         case 0xB2: 
-            pylw("ora d");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "d"); 
             break;
         case 0xB3: 
-            pylw("ora e");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "e"); 
             break;
         case 0xB4: 
-            pylw("ora h");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "h"); 
             break;
         case 0xB5: 
-            pylw("ora l");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "l"); 
             break;
         case 0xB6: 
-            pylw("ora m");
+			pblue("%5s\t", "ora");
+			pgrn("%6s", "m"); 
             break;
         case 0xF6: 
-            pylw("ori ");
+			pblue("%5s\t", "ori");
             DECODE_BYTE();
             break;
         case 0xD3: 
-            pylw("out ");
+			pblue("%5s\t", "out");
             DECODE_BYTE();
             break;
         case 0xE9: 
-            pylw("pchl");
+			pblue("%5s\t", "pchl");
             break;
         case 0xC1: 
-            pylw("pop b");
+			pblue("%5s\t", "pop");
+			pgrn("%6s", "b"); 
             break;
         case 0xD1: 
-            pylw("pop d");
+			pblue("%5s\t", "pop");
+			pgrn("%6s", "d"); 
             break;
         case 0xE1: 
-            pylw("pop h");
+			pblue("%5s\t", "pop");
+			pgrn("%6s", "h"); 
             break;
         case 0xF1: 
-            pylw("pop psw");
+			pblue("%5s\t", "pop");
+			pgrn("%6s", "psw"); 
             break;
         case 0xC5: 
-            pylw("push b");
+			pblue("%5s\t", "push");
+			pgrn("%6s", "b"); 
             break;
         case 0xD5: 
-            pylw("push d");
+			pblue("%5s\t", "push");
+			pgrn("%6s", "d"); 
             break;
         case 0xE5: 
-            pylw("push h");
+			pblue("%5s\t", "push");
+			pgrn("%6s", "h"); 
             break;
         case 0xF5: 
-            pylw("push psw");
+			pblue("%5s\t", "push");
+			pgrn("%6s", "psw"); 
             break;
         case 0x17: 
-            pylw("ral");
+			pblue("%5s\t", "ral");
             break;
         case 0x1F: 
-            pylw("rar");
+			pblue("%5s\t", "rar");
             break;
         case 0xD8: 
-            pylw("rc");
+			pblue("%5s\t", "rc");
             break;
         case 0xC9: 
-            pylw("ret");
+			pblue("%5s\t", "ret");
             break;
         case 0x20: 
-            pylw("rim");
+			pblue("%5s\t", "rim");
             break;
         case 0x07: 
-            pylw("rlc");
+			pblue("%5s\t", "rlc");
             break;
         case 0xF8: 
-            pylw("rm");
+			pblue("%5s\t", "rm");
             break;
         case 0xD0: 
-            pylw("rnc");
+			pblue("%5s\t", "rnc");
             break;
         case 0xC0: 
-            pylw("rnz");
+			pblue("%5s\t", "rnz");
             break;
         case 0xF0: 
-            pylw("rp");
+			pblue("%5s\t", "rp");
             break;
         case 0xE8: 
-            pylw("rpe");
+			pblue("%5s\t", "rpe");
             break;
         case 0xE0: 
-            pylw("rpo");
+			pblue("%5s\t", "rpo");
             break;
         case 0x0F: 
-            pylw("rrc");
+			pblue("%5s\t", "rrc");
             break;
         case 0xC7: 
-            pylw("rst 0");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "0"); 
             break;
         case 0xCF: 
-            pylw("rst 1");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "1"); 
             break;
         case 0xD7: 
-            pylw("rst 2");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "2"); 
             break;
         case 0xDF: 
-            pylw("rst 3");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "3"); 
             break;
         case 0xE7: 
-            pylw("rst 4");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "4"); 
             break;
         case 0xEF: 
-            pylw("rst 5");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "5"); 
             break;
         case 0xF7: 
-            pylw("rst 6");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "6"); 
             break;
         case 0xFF: 
-            pylw("rst 7");
+			pblue("%5s\t", "rst");
+			pgrn("%6s", "7"); 
             break;
         case 0xC8: 
-            pylw("rz");
+			pblue("%5s\t", "rz");
             break;
         case 0x9F: 
-            pylw("sbb a");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "a"); 
             break;
         case 0x98: 
-            pylw("sbb b");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "b"); 
             break;
         case 0x99: 
-            pylw("sbb c");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "c"); 
             break;
         case 0x9A: 
-            pylw("sbb d");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "d"); 
             break;
         case 0x9B: 
-            pylw("sbb e");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "e"); 
             break;
         case 0x9C: 
-            pylw("sbb h");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "h"); 
             break;
         case 0x9D: 
-            pylw("sbb l");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "l"); 
             break;
         case 0x9E: 
-            pylw("sbb m");
+			pblue("%5s\t", "sbb");
+			pgrn("%6s", "m"); 
             break;
         case 0xDE: 
-            pylw("sbi ");
+			pblue("%5s\t", "sbi");
             DECODE_BYTE();
             break;
         case 0x22: 
-            pylw("shld ");
+			pblue("%5s\t", "shld");
             DECODE_WORD();
             break;
         case 0x30: 
-            pylw("sim");
+			pblue("%5s\t", "sim");
             break;
         case 0xF9: 
-            pylw("sphl");
+			pblue("%5s\t", "sphl");
             break;
         case 0x32: 
-            pylw("sta ");
+			pblue("%5s\t", "sta");
             DECODE_WORD();
             break;
         case 0x02: 
-            pylw("stax b");
+			pblue("%5s\t", "stax");
+			pgrn("%6s", "b"); 
             break;
         case 0x12: 
-            pylw("stax d");
+			pblue("%5s\t", "stax");
+			pgrn("%6s", "d"); 
             break;
         case 0x37: 
-            pylw("stc");
+			pblue("%5s\t", "stc");
             break;
         case 0x97: 
-            pylw("sub a");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "a"); 
             break;
         case 0x90: 
-            pylw("sub b");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "b"); 
             break;
         case 0x91: 
-            pylw("sub c");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "c"); 
             break;
         case 0x92: 
-            pylw("sub d");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "d"); 
             break;
         case 0x93: 
-            pylw("sub e");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "e"); 
             break;
         case 0x94: 
-            pylw("sub h");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "h"); 
             break;
         case 0x95: 
-            pylw("sub l");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "l"); 
             break;
         case 0x96: 
-            pylw("sub m");
+			pblue("%5s\t", "sub");
+			pgrn("%6s", "m"); 
             break;
         case 0xD6: 
-            pylw("sui ");
+			pblue("%5s\t", "sui");
             DECODE_BYTE();
             break;
         case 0xEB: 
-            pylw("xchg");
+			pblue("%5s\t", "xchg");
             break;
         case 0xAF: 
-            pylw("xra a");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "a"); 
             break;
         case 0xA8: 
-            pylw("xra b");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "b"); 
             break;
         case 0xA9: 
-            pylw("xra c");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "c"); 
             break;
         case 0xAA: 
-            pylw("xra d");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "d"); 
             break;
         case 0xAB: 
-            pylw("xra e");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "e"); 
             break;
         case 0xAC: 
-            pylw("xra h");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "h"); 
             break;
         case 0xAD: 
-            pylw("xra l");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "l"); 
             break;
         case 0xAE: 
-            pylw("xra m");
+			pblue("%5s\t", "xra");
+			pgrn("%6s", "m"); 
             break;
         case 0xEE: 
-            pylw("xri ");
+			pblue("%5s\t", "xri");
             DECODE_BYTE();
             break;
         case 0xE3: 
-            pylw("xthl");
+			pblue("%5s\t", "xthl");
             break;
     }
 }
