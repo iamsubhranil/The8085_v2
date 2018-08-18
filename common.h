@@ -63,3 +63,7 @@ typedef size_t siz;
 #ifdef __ANDROID__ // no execinfo.h
 #undef STACKTRACE_SHOW
 #endif
+
+#ifndef USE_BCVM
+#define USE_NEOVM
+#endif
