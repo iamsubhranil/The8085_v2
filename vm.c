@@ -1,6 +1,9 @@
+#include "vm.h"
+
+#ifdef USE_BCVM
+
 #include <stdio.h>
 
-#include "vm.h"
 #include "bytecode.h"
 #include "display.h"
 
@@ -603,12 +606,15 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_in:
                 {
                     fflush(stdin);
-                    m->registers[REG_A] = getchar();
+                    u32 in;
+                    printf("\n[in:0x%x] ", NEXT_BYTE());
+                    scanf("%x", &in);
+                    m->registers[REG_A] = (u8)in;
                     break;
                 }
             case BYTECODE_out:
                 {
-                    printf("\n0x%x\n", m->registers[REG_A]);
+                    printf("\n[out:0x%x] 0x%x\n", NEXT_BYTE(), m->registers[REG_A]);
                     fflush(stdout);
                     break;
                 }
@@ -697,3 +703,5 @@ void run(Machine *m, u8 *memory){
         //print_machine(m);
     }
 }
+
+#endif

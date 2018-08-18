@@ -1,12 +1,13 @@
 #include <stdio.h>
 
-#include "display.h"
-#include "vm.h"
 #include "bytecode.h"
 #include "compiler.h"
-#include "util.h"
-#include "test.h"
 #include "Cell/cell.h"
+#include "display.h"
+#include "dump.h"
+#include "test.h"
+#include "util.h"
+#include "vm.h"
 
 // State
 static Machine machine;
@@ -189,6 +190,10 @@ static void init_machine(){
 }
 
 int main(){
+#ifdef USE_NEOVM
+    dump_init();
+    //test_all();
+#endif
     init_machine();
     Cell cell = cell_init(ANSI_FONT_BOLD ">>" ANSI_COLOR_RESET);
     CellKeyword exec = cell_create_keyword("exec", ANSI_COLOR_GREEN, "Execute the instructions from the specified address", exec_action);
