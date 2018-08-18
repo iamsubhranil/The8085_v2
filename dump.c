@@ -285,7 +285,7 @@ static void posix_signal_handler(int sig, siginfo_t *siginfo, void *context){
 #ifdef STACKTRACE_SHOW
     posix_print_stack_trace();
 #else
-    warn("Stacktrace is not currently available for this platform!");
+    pwarn("Stacktrace is not currently available for this platform!");
 #endif
     if(size > 0)
         dump_data_auto();
