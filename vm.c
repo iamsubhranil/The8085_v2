@@ -8,28 +8,8 @@
 #include "display.h"
 
 #define GET_FLAG(x)             ((m->registers[REG_FL] >> x) & 1)
-void print_machine(Machine *m){
-    char regs[] = {'A', 'B', 'C', 'D', 'E', 'H', 'L'};
-    pgrn("\n[Registers]\t");
-    for(u8 i = 0;i < 7;i++)
-        pcyn("%4c\t", regs[i], " ");
-    pmgn("\n          \t");
-    for(u8 i = 0;i < 7;i++)
-        phmgn("", "0x%02x\t", m->registers[i]);
 
-    pgrn("\n[FLAGS] ");
-    char flags[] = {'S', 'Z', ' ', 'A', ' ', 'P', ' ', 'C'};
-    for(u8 i = 0;i < 8;i++)
-        pcyn("%c ", flags[i]);
-    pgrn("\n        ");
-    for(int i = 7;i >= 0;i--)
-        phred("", "%d ", GET_FLAG(i));
-    
-    phblue("\n[PC] ", "0x%0x", m->pc);
-    phylw("\n[SP] ", "0x%0x", m->sp);
-}
-
-void run(Machine *m, u8 *memory){
+void run(Machine *m, u8 *memory, u8 step){
     #define NEXT_BYTE()         memory[m->pc++]
     #define NEXT_DWORD()        ((u16)NEXT_BYTE() | ((u16)NEXT_BYTE() << 8))
     
@@ -694,14 +674,18 @@ void run(Machine *m, u8 *memory){
                     break;
                 }
             case BYTECODE_hlt:
+                m->isbroken = 0;
                 return;
             case BYTECODE_nop:
                 break;
             default:
                 break;
         }
+        if(machine_on_breakpoint(m, memory, step))
+            return;
         //print_machine(m);
     }
+    m->isbroken = 0;
 }
 
 #endif

@@ -23,7 +23,7 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16
         pred("\n[compilation aborted with code %d]", status);
         return false;
     }
-    run(m, &memory[0]);
+    run(m, &memory[0], 0);
     return true;
 }
 

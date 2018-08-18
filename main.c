@@ -59,7 +59,10 @@ void exec_action(CellStringParts parts, Cell *cell){
     phgrn("\n[exec]", " Executing from 0x%x ", from);
     fflush(stdout);
     machine.pc = from;
-    run(&machine, &memory[0]);
+    run(&machine, &memory[0], 0);
+    if(!machine.isbroken){
+        phgrn("\n[exec]", " Execution completed!");
+    }
 exec_action_cleanup:
     cell_stringparts_free(parts);
     return;
@@ -78,7 +81,8 @@ void show_action(CellStringParts parts, Cell *cell){
     if(!parse_address(parts.parts[1], &addr))
         goto show_usage;
     //phgrn("\n[show]", " Showing the content of 0x%x", addr);
-    pred("\n%x: ", addr);
+    pgrn("\n[show]");
+    pred(" %x: ", addr);
     printf("0x%x", memory[addr]);
 show_action_cleanup:
     cell_stringparts_free(parts);
@@ -101,9 +105,9 @@ void set_action(CellStringParts parts, Cell *cell){
     if(!parse_byte(parts.parts[2], &val))
         goto set_usage;
     //phgrn("\n[set]", " Setting the content of 0x%x to 0x%x", addr, val);
-    printf("\nOld value : 0x%x", memory[addr]);
+    phgrn("\n[set]"," Old value : 0x%x", memory[addr]);
     memory[addr] = val;
-    printf("\nNew value : 0x%x", memory[addr]);
+    phgrn("\n[set]"," New value : 0x%x", memory[addr]);
 set_action_cleanup:
     cell_stringparts_free(parts);
     return;
@@ -147,7 +151,7 @@ void load_action(CellStringParts parts, Cell *cell){
             perr("Bytecode offset exceeded its size! Try loading the program at a lower address!");
             goto load_action_cleanup;
         default:
-            pinfo("'%s' loaded in memory in address range 0x%x-0x%x", parts.parts[1], addr, memory_pointer - 1);
+            phgrn("\n[load]"," '%s' loaded " ANSI_FONT_BOLD "[0x%x - 0x%x]", parts.parts[1], addr, memory_pointer - 1);
             break;
     }
 load_action_cleanup:
@@ -179,6 +183,104 @@ dis_usage:
     goto dis_action_cleanup;
 }
 
+void brk_action(CellStringParts parts, Cell *cell){
+    (void)cell;
+    perr("Wrong arguments");
+    pinfo("See 'help break'");
+    cell_stringparts_free(parts);
+}
+
+void brkadd_action(CellStringParts parts, Cell *cell){
+    (void)cell;
+    u16 addr;
+    if(parts.part_count < 2){
+        perr("Wrong number of arguments!");
+        goto brkadd_usage;
+    }
+    if(!parse_address(parts.parts[1], &addr))
+        goto brkadd_usage;
+    if(!machine_add_breakpoint(&machine, addr)){
+        perr("Maximum number(%d) of breakpoints already set!", MAX_BREAKPOINT_COUNT);
+    }
+    else{
+        phgrn("\n[break add]"," Breakpoint added at address 0x%x", addr);
+    }
+brkadd_cleanup:
+    cell_stringparts_free(parts);
+    return;
+brkadd_usage:
+    phgrn("\n[Usage]", " break add <16-bit address>");
+    goto brkadd_cleanup;
+}
+
+void cont_action(CellStringParts cp, Cell *cell){
+    (void)cp; (void)cell;
+    if(machine.isbroken){
+        machine.isbroken = 0;
+        run(&machine, &memory[0], 0);
+        if(!machine.isbroken){
+            phgrn("\n[continue]", " Execution completed!");
+        }
+    }
+    else{
+        perr("Machine was not stopped at a breakpoint! Unable to continue!");
+    }
+    cell_stringparts_free(cp);
+}
+
+void step_action(CellStringParts cp, Cell *cell){
+    (void)cp; (void)cell;
+    if(machine.isbroken){
+        run(&machine, &memory[0], 1);
+        if(!machine.isbroken){
+            phgrn("\n[step]"," Execution completed!");
+        }
+    }
+    else{
+        perr("Machine was not stopped at a breakpoint! Unable to step!");
+    }
+    cell_stringparts_free(cp);
+}
+
+void brkview_action(CellStringParts cp, Cell *cell){
+    (void)cell;
+    if(machine.breakpoint_pointer == 0)
+        pinfo("No breakpoints attached!");
+    else{
+        for(u16 i = 0;i < machine.breakpoint_pointer;i++){
+            pylw("\n[Breakpoint %" Pu16 "]", i);
+            printf(" 0x%x", machine.breakpoints[i]);
+        }
+    }
+    cell_stringparts_free(cp);
+}
+
+void brkrm_action(CellStringParts cp, Cell *cell){
+    (void)cell;
+    u16 addr;
+    if(cp.part_count < 2){
+        perr("Wrong arguments!");
+        goto brkrm_usage;
+    }
+    if(!parse_address(cp.parts[1], &addr))
+        goto brkrm_usage;
+    if(machine.breakpoint_pointer == 0){
+        pwarn("No breakpoints attached!");
+    }
+    else if(!machine_remove_breakpoint(&machine, addr)){
+        perr("No such breakpoint found!");
+    }
+    else{
+        phgrn("\n[break remove]"," Breakpoint removed from 0x%x", addr);
+    }
+brkrm_cleanup:
+    cell_stringparts_free(cp);
+    return;
+brkrm_usage:
+    phgrn("\n[Usage]", " break remove <16-bit address>");
+    goto brkrm_cleanup;
+}
+
 void exit_action(CellStringParts parts, Cell *cell){
     cell_stringparts_free(parts);
     cell->run = 0;
@@ -187,6 +289,8 @@ void exit_action(CellStringParts parts, Cell *cell){
 static void init_machine(){
     machine.pc = 0;
     machine.sp = 0xffff;
+    machine.breakpoint_pointer = 0;
+    machine.isbroken = 0;
 }
 
 int main(){
@@ -203,6 +307,21 @@ int main(){
     CellKeyword ext = cell_create_keyword("exit", ANSI_COLOR_GREEN, "Exit from the REPL", exit_action);
     CellKeyword help = cell_create_keyword("help", ANSI_COLOR_GREEN, "Show this help", cell_default_help);
     CellKeyword dis = cell_create_keyword("dis", ANSI_COLOR_GREEN, "Disassemble bytes stored between specified addresses", dis_action);
+    CellKeyword brk = cell_create_keyword("break", ANSI_COLOR_GREEN, 
+            "Manage breakpoints", brk_action);
+    CellKeyword cont = cell_create_keyword("continue", ANSI_COLOR_GREEN,
+            "Continue execution till the next breakpoint", cont_action);
+    CellKeyword step = cell_create_keyword("step", ANSI_COLOR_GREEN,
+            "Step through the execution of the program", step_action);
+    CellKeyword brkview = cell_create_keyword("view", ANSI_COLOR_GREEN,
+            "View all attached breakpoints", brkview_action);
+    CellKeyword brkadd = cell_create_keyword("add", ANSI_COLOR_GREEN,
+            "Add a new breakpoint at the given address", brkadd_action);
+    CellKeyword brkrem = cell_create_keyword("remove", ANSI_COLOR_GREEN,
+            "Remove an attached breakpoint from the given address", brkrm_action);
+    cell_add_subkeyword(&brk, brkview);
+    cell_add_subkeyword(&brk, brkadd);
+    cell_add_subkeyword(&brk, brkrem);
     cell_insert_keyword(&cell, exec);
     cell_insert_keyword(&cell, show);
     cell_insert_keyword(&cell, set);
@@ -210,6 +329,9 @@ int main(){
     cell_insert_keyword(&cell, ext);
     cell_insert_keyword(&cell, help);
     cell_insert_keyword(&cell, dis);
+    cell_insert_keyword(&cell, brk);
+    cell_insert_keyword(&cell, cont);
+    cell_insert_keyword(&cell, step);
     cell_repl(&cell);
     cell_destroy(&cell);
     printf("\n");
