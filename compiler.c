@@ -59,7 +59,7 @@ typedef CompilationStatus (*compilerFn)(Token t);
 
 // Write a byte to the memory and manage the offset
 u16 compiler_write_byte(u8 value){
-    if(*offset >= memSize){
+    if(memory_full || *offset >= memSize){
         memory_full = 1;
         return *offset;
     }
@@ -211,7 +211,7 @@ CompilationStatus compile_hex(u8 is16){
             pending_labels[pendingPointer].offset = *offset;
             pending_labels[pendingPointer].token = t;
             pendingPointer++;
-            (*offset) += 2;
+            write_dword(0);
             return COMPILE_OK;
         }
         perr("Expected %d bit number!", (8*(is16 + 1)));
@@ -557,7 +557,7 @@ CompilationStatus compile(const char *source, u8 *mem, u16 size, u16 *off){
 
     Token t;
     CompilationStatus lastStatus = COMPILE_OK;
-    while((t = scanToken()).type != TOKEN_EOF && lastStatus == COMPILE_OK && !memory_full)
+    while(lastStatus == COMPILE_OK && !memory_full && (t = scanToken()).type != TOKEN_EOF)
         lastStatus = compilationTable[t.type](t);
 
     if(memory_full)
