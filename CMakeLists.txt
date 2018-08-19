@@ -1,7 +1,8 @@
 set(SOURCE_FILES    bytecode.c
                     neobytecode.c
+                    codegen_bcvm.c
+                    codegen_neovm.c
                     compiler.c
-                    neocompiler.c
                     display.c
                     dump.c
                     machine.c
