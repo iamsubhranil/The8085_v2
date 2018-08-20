@@ -12,7 +12,7 @@
 #define NEXT_DWORD()        ((u16)NEXT_BYTE() | ((u16)NEXT_BYTE() << 8))
 
 #define FROM_PAIR(x, y)     (((u16)m->registers[x] << 8) | m->registers[y])
-#define FROM_HL()           FROM_PAIR(5, 6)
+#define FROM_HL()           FROM_PAIR(REG_H, REG_L)
 
 #define SET_FLAG(x)         (m->registers[REG_FL] |= (1 << x))
 #define RESET_FLAG(x)       (m->registers[REG_FL] &= ~(1 << x))

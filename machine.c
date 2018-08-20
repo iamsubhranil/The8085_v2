@@ -9,9 +9,16 @@ void machine_print(Machine *m){
     pgrn("\n[Registers]\t");
     for(u8 i = 0;i < 7;i++)
         pcyn("%4c\t", regs[i], " ");
+
     pmgn("\n          \t");
-    for(u8 i = 0;i < 7;i++)
-        phmgn("", "0x%02x\t", m->registers[i]);
+
+    phmgn("", "0x%02x\t", m->registers[REG_A]);
+    phmgn("", "0x%02x\t", m->registers[REG_B]);
+    phmgn("", "0x%02x\t", m->registers[REG_C]);
+    phmgn("", "0x%02x\t", m->registers[REG_D]);
+    phmgn("", "0x%02x\t", m->registers[REG_E]);
+    phmgn("", "0x%02x\t", m->registers[REG_H]);
+    phmgn("", "0x%02x\t", m->registers[REG_L]);
 
     pgrn("\n[FLAGS] ");
     char flags[] = {'S', 'Z', ' ', 'A', ' ', 'P', ' ', 'C'};
