@@ -594,8 +594,11 @@ void run(Machine *m, u8 *memory, u8 step){
                 }
             case BYTECODE_out:
                 {
-                    printf("\n[out:0x%x] 0x%x\n", NEXT_BYTE(), m->registers[REG_A]);
-                    fflush(stdout);
+                    u8 addr = NEXT_BYTE();
+                    if(!m->issilent){
+                        printf("\n[out:0x%x] 0x%x\n", addr, m->registers[REG_A]);
+                        fflush(stdout);
+                    }
                     break;
                 }
             case BYTECODE_pchl:
