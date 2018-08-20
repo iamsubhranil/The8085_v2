@@ -136,19 +136,19 @@ void load_action(CellStringParts parts, Cell *cell){
     stat = compile(source, &memory[0], 0xffff, &memory_pointer);
     switch(stat){
         case LABEL_FULL:
-            perr("Compilation aborted!");
             perr("Number of used labels exceeded the maximum permissible value!");
+            perr("Compilation aborted!");
             goto load_action_cleanup;
         case LABELS_PENDING:
-            perr("Compilation aborted!");
             perr("Not all used labels are declared in the program!");
+            perr("Compilation aborted!");
             goto load_action_cleanup;
         case PARSE_ERROR:
             perr("Compilation aborted!");
             goto load_action_cleanup;
         case MEMORY_FULL:
-            perr("Compilation aborted!");
             perr("Bytecode offset exceeded its size! Try loading the program at a lower address!");
+            perr("Compilation aborted!");
             goto load_action_cleanup;
         default:
             phgrn("\n[load]"," '%s' loaded " ANSI_FONT_BOLD "[0x%x - 0x%x]", parts.parts[1], addr, memory_pointer - 1);
@@ -223,7 +223,7 @@ void cont_action(CellStringParts cp, Cell *cell){
         }
     }
     else{
-        perr("Machine was not stopped at a breakpoint! Unable to continue!");
+        perr("No program is running! Unable to continue!");
     }
     cell_stringparts_free(cp);
 }
@@ -237,7 +237,7 @@ void step_action(CellStringParts cp, Cell *cell){
         }
     }
     else{
-        perr("Machine was not stopped at a breakpoint! Unable to step!");
+        perr("No program is running! Unable to step!");
     }
     cell_stringparts_free(cp);
 }
@@ -294,11 +294,11 @@ static void init_machine(){
 }
 
 int main(){
-#ifdef USE_NEOVM
     dump_init();
-    //test_all();
-#endif
     init_machine();
+#ifdef ENABLE_TESTS
+    test_all();
+#endif
     Cell cell = cell_init(ANSI_FONT_BOLD ">>" ANSI_COLOR_RESET);
     CellKeyword exec = cell_create_keyword("exec", ANSI_COLOR_GREEN, "Execute the instructions from the specified address", exec_action);
     CellKeyword show = cell_create_keyword("show", ANSI_COLOR_GREEN, "Show the contents of a specific address", show_action);
