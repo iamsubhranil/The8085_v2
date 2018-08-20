@@ -22,7 +22,7 @@ void bytecode_disassemble_chunk(u8 *memory, u16 pointer, u16 upto){
 void bytecode_disassemble(u8 *memory, u16 pointer){
     intrpointer = pointer + 1;
     u8 opcode = memory[pointer];
-    pred("\n%x: ", pointer);
+    pred("\n%04x: ", pointer);
     #define DECODE_BYTE()   pylw("   %02xh", memory[intrpointer++]);
     #define DECODE_WORD()   pylw(" %02x%02xh", memory[intrpointer + 1], memory[intrpointer]); intrpointer += 2;
     switch(opcode){ 
