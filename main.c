@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "bytecode.h"
+#include "calibrate.h"
 #include "compiler.h"
 #include "Cell/cell.h"
 #include "display.h"
@@ -281,6 +282,12 @@ brkrm_usage:
     goto brkrm_cleanup;
 }
 
+void calb_action(CellStringParts csp, Cell *c){
+    (void)c;
+    calibrate(&machine);
+    cell_stringparts_free(csp);
+}
+
 void exit_action(CellStringParts parts, Cell *cell){
     cell_stringparts_free(parts);
     cell->run = 0;
@@ -291,6 +298,8 @@ static void init_machine(){
     machine.sp = 0xffff;
     machine.breakpoint_pointer = 0;
     machine.isbroken = 0;
+    machine.issilent = 0;
+    machine.sleepfor.tv_nsec = 0;
 }
 
 int main(){
@@ -319,6 +328,8 @@ int main(){
             "Add a new breakpoint at the given address", brkadd_action);
     CellKeyword brkrem = cell_create_keyword("remove", ANSI_COLOR_GREEN,
             "Remove an attached breakpoint from the given address", brkrm_action);
+    CellKeyword calb = cell_create_keyword("calibrate", ANSI_COLOR_GREEN, 
+            "Calibrate the virtual machine to better sync with the host", calb_action);
     cell_add_subkeyword(&brk, brkview);
     cell_add_subkeyword(&brk, brkadd);
     cell_add_subkeyword(&brk, brkrem);
@@ -332,6 +343,7 @@ int main(){
     cell_insert_keyword(&cell, brk);
     cell_insert_keyword(&cell, cont);
     cell_insert_keyword(&cell, step);
+    cell_insert_keyword(&cell, calb);
     cell_repl(&cell);
     cell_destroy(&cell);
     printf("\n");

@@ -5,6 +5,7 @@
 #include "common.h"
 #include "display.h"
 #include <stdio.h>
+#include <time.h>
 
 #define GET_FLAG(x)             ((m->registers[REG_FL] >> x) & 1)
 
@@ -72,25 +73,32 @@
 
 #define JMP_ON(cond)            \
     u16 addr = NEXT_DWORD();    \
-    if(cond)                    \
-    m->pc = addr;               \
+    tstates = 7;                \
+    if(cond){                   \
+        m->pc = addr;           \
+        tstates = 10;           \
+    }                           \
     break;
 
 #define CALL_ON(cond)                               \
     u16 addr = NEXT_DWORD();                        \
+    tstates = 9;                                    \
     if(cond){                                       \
         memory[m->sp - 1] = (m->pc & 0xff00) >> 8;  \
         memory[m->sp - 2] = m->pc & 0x00ff;         \
         m->sp -= 2;                                 \
         m->pc = addr;                               \
+        tstates = 18;                               \
     }                                               \
     break;
 
 #define RET_ON(cond)                        \
+    tstates = 6;                            \
     if(cond){                               \
         m->pc = memory[m->sp];              \
         m->pc |= (memory[m->sp + 1] << 8);  \
         m->sp += 2;                         \
+        tstates = 12;                       \
     }                                       \
     break;
 
@@ -99,26 +107,31 @@
     if(res > 0xffff)                            \
     SET_FLAG(FLG_C);                            \
     m->registers[REG_H] = (res & 0xff00) >> 8;  \
-    m->registers[REG_L] = res & 0x00ff;
+    m->registers[REG_L] = res & 0x00ff;         \
+    tstates = 10;
 
 #define ADC(reg)                                            \
     u8 with1 = m->registers[reg], with2 = GET_FLAG(FLG_C);  \
-    ADD2();
+    ADD2();                                                 \
+    tstates = 4;
 
 #define ADD_R(reg)                  \
     u8 with = m->registers[reg];    \
-    ADD();
+    ADD();                          \
+    tstates = 4;
 
 #define ANA(reg)                \
     u8 with = m->registers[reg];\
     LOGICAL_NOT_CMA(&);         \
-    SET_FLAG(FLG_A);
+    SET_FLAG(FLG_A);            \
+    tstates = 4;
 
 #define CMP(reg)                    \
     u8 bak = m->registers[REG_A];   \
     u8 by = m->registers[reg] + 1;  \
     SUB();                          \
-    m->registers[REG_A] = bak;
+    m->registers[REG_A] = bak;      \
+    tstates = 4;
 
 #define DAD_R(reg)                      \
     u16 with = FROM_PAIR(reg, reg+1);   \
@@ -130,12 +143,14 @@
     INIT_FLG_Z(res);                    \
     INIT_FLG_P(res);                    \
     INIT_FLG_A(m->registers[reg], -1);  \
-    m->registers[reg] = res & 0xff;
+    m->registers[reg] = res & 0xff;     \
+    tstates = 4;
 
 #define DCX(first)                              \
     u16 res = FROM_PAIR(first, first + 1) - 1;  \
     m->registers[first] = (res & 0xff00) >> 8;  \
     m->registers[first + 1] = res & 0x00ff;     \
+    tstates = 6;                                \
     break;
 
 #define INR(reg)                        \
@@ -144,84 +159,102 @@
     INIT_FLG_Z(res);                    \
     INIT_FLG_P(res);                    \
     INIT_FLG_A(m->registers[reg], 1);   \
-    m->registers[reg] = res & 0xff;
+    m->registers[reg] = res & 0xff;     \
+    tstates = 4;
 
 #define INX(first)                              \
     u16 res = FROM_PAIR(first, first + 1) + 1;  \
     m->registers[first] = (res & 0xff00) >> 8;  \
-    m->registers[first + 1] = res & 0x00ff;
+    m->registers[first + 1] = res & 0x00ff;     \
+    tstates = 6;
 
 #define LDAX(first)                         \
     u16 from = FROM_PAIR(first, first + 1); \
-    m->registers[REG_A] = memory[from];
+    m->registers[REG_A] = memory[from];     \
+    tstates = 7;
 
 #define LXI(first)                          \
     m->registers[first + 1] = NEXT_BYTE();  \
-    m->registers[first] = NEXT_BYTE();
+    m->registers[first] = NEXT_BYTE();      \
+    tstates = 10;
 
-#define MOV(to, from)                   \
-    m->registers[to] = m->registers[from];
+#define MOV(to, from)                       \
+    m->registers[to] = m->registers[from];  \
+    tstates = 4;
 
 #define MOV_r_m(to)                 \
     u16 from = FROM_HL();           \
-    m->registers[to] = memory[from];
+    m->registers[to] = memory[from];\
+    tstates = 7;
 
 #define MOV_m_r(from)               \
     u16 to = FROM_HL();             \
-    memory[to] = m->registers[from];
+    memory[to] = m->registers[from];\
+    tstates = 7;
 
 #define MVI(to)             \
     u8 data = NEXT_BYTE();  \
-    m->registers[to] = data;
+    m->registers[to] = data;\
+    tstates = 7;
 
 #define ORA(reg)                    \
     u8 with = m->registers[reg];    \
-    LOGICAL_NOT_CMA(|);
+    LOGICAL_NOT_CMA(|);             \
+    tstates = 4;
 
 #define POP(reg)                            \
     m->registers[reg + 1] = memory[m->sp];  \
     m->sp++;                                \
     m->registers[reg] = memory[m->sp];      \
-    m->sp++;
+    m->sp++;                                \
+    tstates = 10;
 
 #define PUSH(reg)                               \
     memory[m->sp - 1] = m->registers[reg];      \
     memory[m->sp - 2] = m->registers[reg + 1];  \
-    m->sp -= 2;
+    m->sp -= 2;                                 \
+    tstates = 12;
 
 #define RST(addr)                               \
     memory[m->sp - 1] = (m->pc & 0xff00) >> 8;  \
     memory[m->sp - 2] = m->pc & 0x00ff;         \
     m->sp -= 2;                                 \
     m->pc = addr;                               \
+    tstates = 12;
 
 #define SBB(reg)                                    \
     u8 by = m->registers[reg] + GET_FLAG(FLG_C);    \
-    SUB();
+    SUB();                                          \
+    tstates = 4;
 
 #define STAX(first)                         \
     u16 to = FROM_PAIR(first, first + 1);   \
-    memory[to] = m->registers[REG_A];
+    memory[to] = m->registers[REG_A];       \
+    tstates = 7;
 
 #define SUB_r(reg)              \
     u8 by = m->registers[reg];  \
-    SUB();
+    SUB();                      \
+    tstates = 4;
 
 #define XRA(reg)                    \
     u8 with = m->registers[reg];    \
-    LOGICAL_NOT_CMA(^);
+    LOGICAL_NOT_CMA(^);             \
+    tstates = 4;
 
 #define WARN_NOT_IMPLEMENTED(ins)                   \
     pwarn("Instruction not implemented : " #ins);
 
 void run(Machine *m, u8 *memory, u8 step){	
     u8 opcode;
+    u8 tstates = 0;
     while((opcode = NEXT_BYTE()) != 0x76){
         switch(opcode){
             case 0xCE: // ACI Data
                 {
                     u8 with1 = NEXT_BYTE(), with2 = GET_FLAG(FLG_C);
                     ADD2();
+                    tstates = 7;
                     break;
                 }
             case 0x8F: // ADC A
@@ -263,6 +296,7 @@ void run(Machine *m, u8 *memory, u8 step){
                 {
                     u8 with1 = memory[FROM_HL()], with2 = GET_FLAG(FLG_C);
                     ADD2();
+                    tstates = 7;
                     break;
                 }
             case 0x87: // ADD A
@@ -304,12 +338,14 @@ void run(Machine *m, u8 *memory, u8 step){
                 {
                     u8 with = memory[FROM_HL()];
                     ADD();
+                    tstates = 7;
                     break;
                 }
             case 0xC6: // ADI Data
                 {
                     u8 with = NEXT_BYTE();
                     ADD();
+                    tstates = 7;
                     break;
                 }
             case 0xA7: // ANA A
@@ -352,6 +388,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     u8 with = memory[FROM_HL()];
                     LOGICAL_NOT_CMA(&);
                     SET_FLAG(FLG_A);
+                    tstates = 7;
                     break;
                 }
             case 0xE6: // ANI Data 
@@ -359,6 +396,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     u8 with = NEXT_BYTE();
                     LOGICAL_NOT_CMA(&);
                     SET_FLAG(FLG_A);
+                    tstates = 7;
                     break;
                 }
             case 0xCD: // CALL Label
@@ -379,11 +417,13 @@ void run(Machine *m, u8 *memory, u8 step){
             case 0x2F: // CMA 
                 {
                     m->registers[REG_A] = ~m->registers[REG_A];
+                    tstates = 4;
                     break;
                 }
             case 0x3F: // CMC
                 {
                     CHANGE_FLAG(FLG_C, !(GET_FLAG(FLG_C)));
+                    tstates = 4;
                     break;
                 }
             case 0xBF: // CMP A
@@ -427,6 +467,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     u8 by = memory[FROM_HL()] + 1;
                     SUB();
                     m->registers[REG_A] = bak;
+                    tstates = 7;
                     break;
                 }
             case 0xD4: // CNC Label
@@ -455,6 +496,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     u8 by = NEXT_BYTE();
                     SUB();
                     m->registers[REG_A] = bak;
+                    tstates = 7;
                     break;
                 }
             case 0xE4: // CPO Label
@@ -476,6 +518,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     if(high > 9 || GET_FLAG(FLG_C))
                         with |= 0x60;
                     ADD();
+                    tstates = 4;
                     break;
                 }
             case 0x09: // DAD B
@@ -542,6 +585,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     INIT_FLG_P(res);
                     INIT_FLG_A(memory[FROM_HL()], -1);
                     memory[FROM_HL()] = res & 0xff;
+                    tstates = 10;
                     break;
                 }
             case 0x0B: // DCX B
@@ -562,6 +606,7 @@ void run(Machine *m, u8 *memory, u8 step){
             case 0x3B: // DCX SP
                 {
                     m->sp--;
+                    tstates = 6;
                     break;
                 }
             case 0xF3: // DI
@@ -577,6 +622,7 @@ void run(Machine *m, u8 *memory, u8 step){
             case 0x76: // HLT
                 {
                     m->isbroken = 0;
+                    tstates = 5;
                     return;
                 }
             case 0xDB: // IN Port-Address
@@ -586,6 +632,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     pblue("\n[in:0x%x] ", addr);
                     scanf("%x", &val);
                     m->registers[REG_A] = (u8)val;
+                    tstates = 10;
                     break;
                 }
             case 0x3C: // INR A
@@ -631,6 +678,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     INIT_FLG_P(res);
                     INIT_FLG_A(memory[FROM_HL()], 1);
                     memory[FROM_HL()] = res & 0xff;
+                    tstates = 10;
                     break;
                 }
             case 0x03: // INX B
@@ -651,6 +699,7 @@ void run(Machine *m, u8 *memory, u8 step){
             case 0x33: // INX SP
                 {
                     m->sp++;
+                    tstates = 6;
                     break;
                 }
             case 0xDA: // JC Label
@@ -701,6 +750,7 @@ void run(Machine *m, u8 *memory, u8 step){
             case 0x3A: // LDA Address
                 {
                     m->registers[REG_A] = memory[NEXT_DWORD()];
+                    tstates = 13;
                     break;
                 }
             case 0x0A: // LDAX B
@@ -718,6 +768,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     u16 addr = NEXT_DWORD();
                     m->registers[REG_L] = memory[addr];
                     m->registers[REG_H] = memory[addr + 1];
+                    tstates = 16;
                     break;
                 }
             case 0x01: // LXI B
@@ -738,6 +789,7 @@ void run(Machine *m, u8 *memory, u8 step){
             case 0x31: // LXI SP
                 {
                     m->sp = NEXT_DWORD();
+                    tstates = 10;
                     break;
                 }
             case 0x7F: // MOV A, A
@@ -1094,10 +1146,12 @@ void run(Machine *m, u8 *memory, u8 step){
                 {
                     u16 to = FROM_HL();
                     memory[to] = NEXT_BYTE();
+                    tstates = 10;
                     break;
                 }
             case 0x00: // NOP
                 {
+                    tstates = 4;
                     break;
                 }
             case 0xB7: // ORA A
@@ -1139,26 +1193,33 @@ void run(Machine *m, u8 *memory, u8 step){
                 {
                     u8 with = memory[FROM_HL()];
                     LOGICAL_NOT_CMA(|);
+                    tstates = 7;
                     break;
                 }
             case 0xF6: // ORI Data
                 {
                     u8 with = NEXT_BYTE();
                     LOGICAL_NOT_CMA(|);
+                    tstates = 7;
                     break;
                 }
             case 0xD3: // OUT Port-Address
                 {
                     u8 addr = NEXT_BYTE();
-                    pylw("\n[out:0x%x]", addr);
-                    printf(" 0x%x", m->registers[REG_A]);
-                    fflush(stdout);
+                    tstates = 7;
+                    if(!m->issilent){
+                        pylw("\n[out:0x%x]", addr);
+                        printf(" 0x%x", m->registers[REG_A]);
+                        fflush(stdout);
+                        tstates = 10;
+                    }
                     break;
                 }
             case 0xE9: // PCHL
                 {
                     m->pc = m->registers[REG_L];
                     m->pc |= (m->registers[REG_H] << 8);
+                    tstates = 6;
                     break;
                 }
             case 0xC1: // POP B
@@ -1182,6 +1243,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     m->sp++;
                     m->registers[REG_A] = memory[m->sp];
                     m->sp++;
+                    tstates = 10;
                     break;
                 }
             case 0xC5: // PUSH B
@@ -1204,6 +1266,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     memory[m->sp - 1] = m->registers[REG_A];
                     memory[m->sp - 2] = m->registers[REG_FL];
                     m->sp -= 2;
+                    tstates = 12;
                     break;
                 }
             case 0x17: // RAL
@@ -1213,6 +1276,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     CHANGE_FLAG(FLG_C, d7); // Set/reset the carry
                     m->registers[REG_A] <<= 1;
                     m->registers[REG_A] |= d0;
+                    tstates = 4;
                     break;
                 }
             case 0x1F: // RAR
@@ -1222,6 +1286,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     CHANGE_FLAG(FLG_C, d0); // Set/reset the carry
                     m->registers[REG_A] >>= 1;
                     m->registers[REG_A] |= (d7 << 7);
+                    tstates = 4;
                     break;
                 }
             case 0xD8: // RC
@@ -1245,6 +1310,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     CHANGE_FLAG(FLG_C, d7); // Set/reset the carry
                     m->registers[REG_A] <<= 1;
                     m->registers[REG_A] |= d7;
+                    tstates = 4;
                     break;
                 }
             case 0xF8: // RM
@@ -1283,6 +1349,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     CHANGE_FLAG(FLG_C, d0); // Set/reset the carry
                     m->registers[REG_A] >>= 1;
                     m->registers[REG_A] |= (d0 << 7);
+                    tstates = 4;
                     break;
                 }
             case 0xC7: // RST 0
@@ -1369,12 +1436,14 @@ void run(Machine *m, u8 *memory, u8 step){
                 {
                     u8 by = memory[FROM_HL()] + GET_FLAG(FLG_C);
                     SUB();
+                    tstates = 7;
                     break;
                 }
             case 0xDE: // SBI Data
                 {
                     u8 by = NEXT_BYTE() + GET_FLAG(FLG_C);
                     SUB();
+                    tstates = 7;
                     break;
                 }
             case 0x22: // SHLD Address
@@ -1382,6 +1451,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     u16 addr = NEXT_DWORD();
                     memory[addr] = m->registers[REG_L];
                     memory[addr + 1] = m->registers[REG_H];
+                    tstates = 16;
                     break;
                 }
             case 0x30: // SIM
@@ -1392,12 +1462,14 @@ void run(Machine *m, u8 *memory, u8 step){
             case 0xF9: // SPHL
                 {
                     m->sp = FROM_HL();
+                    tstates = 6;
                     break;
                 }
             case 0x32: // STA Address
                 {
                     u16 to = NEXT_DWORD();
                     memory[to] = m->registers[REG_A];
+                    tstates = 13;
                     break;
                 }
             case 0x02: // STAX B
@@ -1454,12 +1526,14 @@ void run(Machine *m, u8 *memory, u8 step){
                 {
                     u8 by = memory[FROM_HL()];
                     SUB();
+                    tstates = 7;
                     break;
                 }
             case 0xD6: // SUI Data
                 {
                     u8 by = NEXT_BYTE();
                     SUB();
+                    tstates = 7;
                     break;
                 }
             case 0xEB: // XCHG
@@ -1470,6 +1544,7 @@ void run(Machine *m, u8 *memory, u8 step){
                     m->registers[REG_E] = m->registers[REG_L];
                     m->registers[REG_H] = td;
                     m->registers[REG_L] = te;
+                    tstates = 4;
                     break;
                 }
             case 0xAF: // XRA A
@@ -1511,12 +1586,14 @@ void run(Machine *m, u8 *memory, u8 step){
                 {
                     u8 with = memory[FROM_HL()];
                     LOGICAL_NOT_CMA(^);
+                    tstates = 7;
                     break;
                 }
             case 0xEE: // XRI Data
                 {
                     u8 with = NEXT_BYTE();
                     LOGICAL_NOT_CMA(^);
+                    tstates = 7;
                     break;
                 }
             case 0xE3: // XTHL
@@ -1527,8 +1604,14 @@ void run(Machine *m, u8 *memory, u8 step){
                     memory[m->sp] = m->registers[REG_L];
                     m->registers[REG_H] = td;
                     m->registers[REG_L] = te;
+                    tstates = 16;
                     break;
                 }
+        }
+        if(m->sleepfor.tv_nsec > 0){
+            struct timespec timetosleep = m->sleepfor;
+            timetosleep.tv_nsec *= tstates;
+            nanosleep(&timetosleep, NULL);
         }
         if(machine_on_breakpoint(m, memory, step))
             return;
