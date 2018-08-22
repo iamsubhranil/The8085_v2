@@ -27,7 +27,7 @@ static double required_time = (total_tstates/MACHINE_FREQ);
 
 void calibrate(Machine *m){
     (void)m;
-    Machine cm = {{0}, 0, 0xffff, {0}, 0, 0, 1, {0, 0}};
+    Machine cm = {{0}, 0, 0xffff, {0}, 0, 0, 1, m->sleepfor};
     u8 memory[0xff];
     u16 pointer = 0;
     compiler_reset();
@@ -50,36 +50,39 @@ void calibrate(Machine *m){
     double avg_tm_per_tstate = total/(total_tstates*RUNCOUNT);
     double sleepfor = 0;
 
-
-    if(avg_tm_per_tstate < req_tm_per_tstate)
-        sleepfor = req_tm_per_tstate - avg_tm_per_tstate;
-
-    //double calmhz = (total_tstates * RUNCOUNT) / total;
-    //if(calmhz > MACHINE_FREQ)
-    //    sleepfor = 1/(calmhz - MACHINE_FREQ);
-
-    cm.sleepfor.tv_sec = (time_t)sleepfor;
-    cm.sleepfor.tv_nsec = (long)(sleepfor * 1000000000);
-
     pinfo("[Before] Total time : %fs (%fs/run) (%.10fs/t-state) (%f mHz)", 
             total, RUNCOUNT, total/RUNCOUNT, avg_tm_per_tstate, (total_tstates * RUNCOUNT)/(total * 1000000));
-    pinfo("Adjusting sleep for %ldns..", cm.sleepfor.tv_nsec);
-    m->sleepfor = cm.sleepfor;
-   
-    total = 0;
-    runcount = RUNCOUNT;
-    while(runcount--){
-        clock_t start = clock();
-        // Run delay
-        cm.pc = 0;
-        run(&cm, memory, 0);
-        clock_t end = clock();
-        double sec = (double)(end - start) / CLOCKS_PER_SEC;
-        //pinfo("Delay took %f seconds", sec);
-        total += sec;
-    }
-    avg_tm_per_tstate = total/(total_tstates*RUNCOUNT);
 
-    pinfo("[After] Total time : %fs (%fs/run) (%.10fs/t-state) (%f mHz)", 
-            total, RUNCOUNT, total/RUNCOUNT, avg_tm_per_tstate, (total_tstates * RUNCOUNT)/(total * 1000000));
+    if(avg_tm_per_tstate < req_tm_per_tstate){
+        sleepfor = req_tm_per_tstate - avg_tm_per_tstate;
+
+        //double calmhz = (total_tstates * RUNCOUNT) / total;
+        //if(calmhz > MACHINE_FREQ)
+        //    sleepfor = 1/(calmhz - MACHINE_FREQ);
+
+        cm.sleepfor.tv_sec = (time_t)sleepfor;
+        cm.sleepfor.tv_nsec = m->sleepfor.tv_nsec + (long)(sleepfor * 1000000000);
+
+        pinfo("Adjusting sleep for %ldns(%.10lfs)..", cm.sleepfor.tv_nsec, sleepfor);
+        m->sleepfor = cm.sleepfor;
+
+        total = 0;
+        runcount = RUNCOUNT;
+        while(runcount--){
+            clock_t start = clock();
+            // Run delay
+            cm.pc = 0;
+            run(&cm, memory, 0);
+            clock_t end = clock();
+            double sec = (double)(end - start) / CLOCKS_PER_SEC;
+            //pinfo("Delay took %f seconds", sec);
+            total += sec;
+        }
+        avg_tm_per_tstate = total/(total_tstates*RUNCOUNT);
+
+        pinfo("[After] Total time : %fs (%fs/run) (%.10fs/t-state) (%f mHz)", 
+                total, RUNCOUNT, total/RUNCOUNT, avg_tm_per_tstate, (total_tstates * RUNCOUNT)/(total * 1000000));
+    }
+    else
+        pinfo("Not enough frequency delta to calibrate!");
 }
