@@ -540,13 +540,35 @@ CompilationStatus patch_labels(){
     return ret;
 }
 
+// Check for and report the presence
+// of pending labels.
+// This is usually called by the inline
+// assembler 'asm', after the user has
+// invoked 'exit'.
+void compiler_report_pending(){
+    u16 count = 0;
+    for(u16 i = 0;i < pendingPointer;i++){
+        if(labelTable[pending_labels[i].idx].isDeclared == 0){
+            pwarn("Label '%.*s' is not declared!", pending_labels[i].token.length,
+                    pending_labels[i].token.start);
+            count++;
+        }
+    }
+    if(count > 0){
+        pwarn("%" Pu16 " label%s %s used but not declared!", count, count > 1 ? "s" : "", count > 1 ? "are" : "is");
+        pinfo("To avoid erroneous results, patch %s manually before execution.", count > 1 ? "them" : "it");
+    }
+}
+
 // Reset the internal states of the compiler
 void compiler_reset(){
     for(siz i = 0;i < labelPointer;i++)
         free(labelTable[i].label);
     labelPointer = 0;
-    for(siz i = 0;i < pendingPointer;i++)
+    for(siz i = 0;i < pendingPointer;i++){
         free((char *)pending_labels[i].token.start);
+        pending_labels[i].decl_shown = 0;
+    }
     pendingPointer = 0;
 
     memory = NULL;

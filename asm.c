@@ -116,7 +116,7 @@ static void parse_action(CellStringParts csp, Cell *cell){
             pointer = pbak;
             break;
         case LABELS_PENDING:
-            pinfo("To avoid errornous execution, either declare or manually patch the label before execution.");
+            pinfo("To avoid erroneous results, either declare or manually patch the label before execution.");
         case COMPILE_OK:
             update_prefix();
             free(cell->prefix);
@@ -132,13 +132,11 @@ static void parse_action(CellStringParts csp, Cell *cell){
 }
 
 static void label_action(CellStringParts csp, Cell *c){
-    printf("\n");
+    free(csp.parts[0]);
     for(siz i = 0;i < csp.part_count - 1;i++){
         csp.parts[i] = csp.parts[i + 1];
-        printf("%s ", csp.parts[i]);
     }
     csp.part_count--;
-    //free(csp.parts[csp.part_count + 1]);
     parse_action(csp, c);
 }
 
@@ -196,6 +194,7 @@ static void asm_action(CellStringParts csp, Cell *t){
             pinfo("To exit from this shell, type 'exit'. For help on the keywords, type 'help'.");
 
             cell_repl(&editor);
+            compiler_report_pending();
             cell_destroy(&editor);
         }
     }
