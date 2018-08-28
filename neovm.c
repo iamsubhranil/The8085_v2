@@ -128,7 +128,7 @@
 
 #define CMP(reg)                    \
     u8 bak = m->registers[REG_A];   \
-    u8 by = m->registers[reg] + 1;  \
+    u8 by = m->registers[reg];      \
     SUB();                          \
     m->registers[REG_A] = bak;      \
     tstates = 4;
