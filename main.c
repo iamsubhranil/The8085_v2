@@ -135,6 +135,8 @@ load_usage:
 void dis_action(CellStringParts parts, Cell *cell){
     (void)cell;
     u16 strtaddr, endaddr;
+    char separator[45] = {[0 ... 44] = '-'};
+    separator[44] = 0;
     if(parts.part_count < 3){
         perr("Wrong number of arguments!");
         goto dis_usage;
@@ -144,6 +146,8 @@ void dis_action(CellStringParts parts, Cell *cell){
     if(!parse_hex_16(parts.parts[2], &endaddr))
         goto dis_usage;
     //phgrn("\n[dis]", " Disassembling memory contents from 0x%x to 0x%x", strtaddr, endaddr);
+    printf("\nAddress %15s\t\t%8s", "Assembly", "Hex");
+    printf("\n%s", separator);
     bytecode_disassemble_chunk(&memory[0], strtaddr, endaddr);
 dis_action_cleanup:
     cell_stringparts_free(parts);
