@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "asm.h"
 #include "bytecode.h"
 #include "calibrate.h"
 #include "compiler.h"
@@ -15,39 +16,6 @@ static Machine machine;
 static u8 memory[0xffff] = {0};
 static u16 memory_pointer = 0;
 
-bool parse_byte(char *str, u8 *store){
-    char *end = NULL;
-    u32 val;
-    val = strtol(str, &end, 16);
-    if(*end != 0){
-        perr("Bad byte '%s'!", str);
-        return 0;
-    }
-    if(val > 0xff){
-        perr("Byte out of range : '%s'!", str);
-        return 0;
-    }
-    *store = val;
-    return 1;
-}
-
-
-bool parse_address(char *str, u16 *store){
-    char *end = NULL;
-    u32 addr;
-    addr = strtol(str, &end, 16);
-    if(*end != 0){
-        perr("Bad address '%s'!", str);
-        return 0;
-    }
-    if(addr > 0xffff){
-        perr("Address out of range : '%s'!", str);
-        return 0;
-    }
-    *store = addr;
-    return 1;
-}
-
 void exec_action(CellStringParts parts, Cell *cell){
     (void)cell;
     u16 from;
@@ -55,7 +23,7 @@ void exec_action(CellStringParts parts, Cell *cell){
         perr("Specify the address to execute from!");
         goto exec_usage;
     }
-    if(!parse_address(parts.parts[1], &from))
+    if(!parse_hex_16(parts.parts[1], &from))
         goto exec_usage;
     phgrn("\n[exec]", " Executing from 0x%x ", from);
     fflush(stdout);
@@ -79,7 +47,7 @@ void show_action(CellStringParts parts, Cell *cell){
         perr("Specify the address to inspect!");
         goto show_usage;
     }
-    if(!parse_address(parts.parts[1], &addr))
+    if(!parse_hex_16(parts.parts[1], &addr))
         goto show_usage;
     //phgrn("\n[show]", " Showing the content of 0x%x", addr);
     pgrn("\n[show]");
@@ -101,9 +69,9 @@ void set_action(CellStringParts parts, Cell *cell){
         perr("Wrong arguments!");
         goto set_usage;
     }
-    if(!parse_address(parts.parts[1], &addr))
+    if(!parse_hex_16(parts.parts[1], &addr))
         goto set_usage;
-    if(!parse_byte(parts.parts[2], &val))
+    if(!parse_hex_byte(parts.parts[2], &val))
         goto set_usage;
     //phgrn("\n[set]", " Setting the content of 0x%x to 0x%x", addr, val);
     phgrn("\n[set]"," Old value : 0x%x", memory[addr]);
@@ -126,7 +94,7 @@ void load_action(CellStringParts parts, Cell *cell){
         perr("Wrong number of arguments!");
         goto load_usage;
     }
-    if(!parse_address(parts.parts[2], &addr))
+    if(!parse_hex_16(parts.parts[2], &addr))
         goto load_usage;
     //phgrn("\n[Load]", " Compiling and loading %s at 0x%x", parts.parts[1], addr);
     source = readFile(parts.parts[1]);
@@ -155,6 +123,7 @@ void load_action(CellStringParts parts, Cell *cell){
             phgrn("\n[load]"," '%s' loaded " ANSI_FONT_BOLD "[0x%x - 0x%x]", parts.parts[1], addr, memory_pointer - 1);
             break;
     }
+    free(source);
 load_action_cleanup:
     cell_stringparts_free(parts);
     return;
@@ -170,9 +139,9 @@ void dis_action(CellStringParts parts, Cell *cell){
         perr("Wrong number of arguments!");
         goto dis_usage;
     }
-    if(!parse_address(parts.parts[1], &strtaddr))
+    if(!parse_hex_16(parts.parts[1], &strtaddr))
         goto dis_usage;
-    if(!parse_address(parts.parts[2], &endaddr))
+    if(!parse_hex_16(parts.parts[2], &endaddr))
         goto dis_usage;
     //phgrn("\n[dis]", " Disassembling memory contents from 0x%x to 0x%x", strtaddr, endaddr);
     bytecode_disassemble_chunk(&memory[0], strtaddr, endaddr);
@@ -198,7 +167,7 @@ void brkadd_action(CellStringParts parts, Cell *cell){
         perr("Wrong number of arguments!");
         goto brkadd_usage;
     }
-    if(!parse_address(parts.parts[1], &addr))
+    if(!parse_hex_16(parts.parts[1], &addr))
         goto brkadd_usage;
     if(!machine_add_breakpoint(&machine, addr)){
         perr("Maximum number(%d) of breakpoints already set!", MAX_BREAKPOINT_COUNT);
@@ -263,7 +232,7 @@ void brkrm_action(CellStringParts cp, Cell *cell){
         perr("Wrong arguments!");
         goto brkrm_usage;
     }
-    if(!parse_address(cp.parts[1], &addr))
+    if(!parse_hex_16(cp.parts[1], &addr))
         goto brkrm_usage;
     if(machine.breakpoint_pointer == 0){
         pwarn("No breakpoints attached!");
@@ -344,8 +313,10 @@ int main(){
     cell_insert_keyword(&cell, cont);
     cell_insert_keyword(&cell, step);
     cell_insert_keyword(&cell, calb);
+    asm_init(&cell, &memory[0]);
     cell_repl(&cell);
     cell_destroy(&cell);
+    compiler_reset();
     printf("\n");
     return 0;
 }

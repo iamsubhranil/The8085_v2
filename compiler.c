@@ -11,7 +11,7 @@
 #define NUM_LABELS  32
 
 typedef struct{
-    const char *label;  // name of the label
+    char *label;        // name of the label
     int length;         // length of the string
     u16 offset;         // the offset at which the label is declared
     u8 isDeclared;      // marker to denote if the label is declared
@@ -26,6 +26,8 @@ typedef struct{
                         // in the moment it was used
     u16 offset;         // offset in the memory where the label is used, to patch later by the address
                         // of the label
+    u8 decl_shown;      // Denotes whether the warning of using this undeclared label was already
+                        // shown
 } PendingLabel;
 
 // C style list of labels
@@ -33,7 +35,7 @@ static Label labelTable[NUM_LABELS] = {{NULL, 0, 0, 0}};
 static siz labelPointer = 0;
 
 // C style list of pending labels
-static PendingLabel pending_labels[NUM_PENDING_LABELS] = {{{}, 0, 0}};
+static PendingLabel pending_labels[NUM_PENDING_LABELS] = {{{}, 0, 0, 0}};
 static siz pendingPointer = 0;
 
 // Memory management for actually writing bytes
@@ -151,8 +153,11 @@ CompilationStatus compile_unexpected_token(Token t){
 
 // Compiles a label and adds it to the labelTable
 CompilationStatus compile_label(Token t){
-    if(!consume(TOKEN_COLON, "Expected ':' after label!"))
+    if(!consume(TOKEN_COLON, "Expected ':' after label!")){
+        token_highlight_source(t);
+        token_highlight_source(presentToken);
         return PARSE_ERROR;
+    }
     if(labelPointer == NUM_LABELS)
         return LABEL_FULL;
     for(u16 i = 0;i < labelPointer;i++){
@@ -163,7 +168,7 @@ CompilationStatus compile_label(Token t){
             return COMPILE_OK;
         }
     }
-    labelTable[labelPointer].label = t.start;
+    labelTable[labelPointer].label = strdup(t.start);
     labelTable[labelPointer].length = t.length;
     labelTable[labelPointer].offset = *offset;
     labelTable[labelPointer].isDeclared = 1;
@@ -200,7 +205,7 @@ CompilationStatus compile_hex(u8 is16){
             }
             // It might be a forward reference
             if(!found){ // The label was not found earlier
-                labelTable[labelPointer].label = t.start;
+                labelTable[labelPointer].label = strdup(t.start);
                 labelTable[labelPointer].length = t.length;
                 labelTable[labelPointer].offset = 0;
                 labelTable[labelPointer].isDeclared = 0;
@@ -210,6 +215,7 @@ CompilationStatus compile_hex(u8 is16){
             pending_labels[pendingPointer].idx = found ? idx : (labelPointer - 1);
             pending_labels[pendingPointer].offset = *offset;
             pending_labels[pendingPointer].token = t;
+            pending_labels[pendingPointer].token.start = strdup(t.start);
             pendingPointer++;
             write_dword(0);
             return COMPILE_OK;
@@ -523,10 +529,11 @@ CompilationStatus patch_labels(){
             *offset = pending_labels[i].offset;
             write_dword(labelTable[pending_labels[i].idx].offset);
         }
-        else{
+        else if(pending_labels[i].decl_shown == 0){
             pwarn("Label used but not declared yet!");
             token_highlight_source(pending_labels[i].token);
             ret = LABELS_PENDING;
+            pending_labels[i].decl_shown = 1;
         }
     }
     *offset = bak;
@@ -535,7 +542,11 @@ CompilationStatus patch_labels(){
 
 // Reset the internal states of the compiler
 void compiler_reset(){
+    for(siz i = 0;i < labelPointer;i++)
+        free(labelTable[i].label);
     labelPointer = 0;
+    for(siz i = 0;i < pendingPointer;i++)
+        free((char *)pending_labels[i].token.start);
     pendingPointer = 0;
 
     memory = NULL;

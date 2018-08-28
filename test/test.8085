@@ -1,8 +1,8 @@
 // Load data in memory
 lxi h, var1
-mvi m, 01h
-lxi h, var2
 mvi m, 02h
+lxi h, var2
+mvi m, 01h
 lxi h, var3
 mvi m, 03h
 
