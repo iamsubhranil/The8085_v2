@@ -33,7 +33,7 @@ void calibrate(Machine *m){
     compiler_reset();
     compile(sub_delay, memory, 0xff, &pointer);
     double req_tm_per_tstate = required_time/total_tstates;
-    pinfo("Estimated time : %fs (%fs/run) (%.10fs/t-state) (%f mHz)", 
+    pinfo("Estimated time : %lfs (%lfs/run) (%.10lfs/t-state) (%lf mHz)", 
             required_time * RUNCOUNT, required_time, req_tm_per_tstate, MACHINE_FREQ/1000000);
     double total = 0;
     int runcount = RUNCOUNT;
@@ -50,7 +50,7 @@ void calibrate(Machine *m){
     double avg_tm_per_tstate = total/(total_tstates*RUNCOUNT);
     double sleepfor = 0;
 
-    pinfo("[Before] Total time : %fs (%fs/run) (%.10fs/t-state) (%f mHz)", 
+    pinfo("[Before] Total time : %lfs (%lfs/run) (%.10lfs/t-state) (%lf mHz)", 
             total, RUNCOUNT, total/RUNCOUNT, avg_tm_per_tstate, (total_tstates * RUNCOUNT)/(total * 1000000));
 
     if(avg_tm_per_tstate < req_tm_per_tstate){
@@ -80,7 +80,7 @@ void calibrate(Machine *m){
         }
         avg_tm_per_tstate = total/(total_tstates*RUNCOUNT);
 
-        pinfo("[After] Total time : %fs (%fs/run) (%.10fs/t-state) (%f mHz)", 
+        pinfo("[After] Total time : %lfs (%lfs/run) (%.10lfs/t-state) (%lf mHz)", 
                 total, RUNCOUNT, total/RUNCOUNT, avg_tm_per_tstate, (total_tstates * RUNCOUNT)/(total * 1000000));
     }
     else
