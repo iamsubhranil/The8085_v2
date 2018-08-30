@@ -14,6 +14,7 @@ static void reset_machine(Machine *m, u8 *memory, u16 size){
     memset(m->registers, 0, 8);
     m->pc = 0;
     m->sp = 0xffff - 1;
+    m->breakpoint_pointer = 0;
 }
 
 static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16 pointer){
@@ -23,32 +24,33 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size, u16
         pred("\n[compilation aborted with code %d]", status);
         return false;
     }
-    run(m, &memory[0]);
+    run(m, &memory[0], 0);
     return true;
 }
 
-#define TEST(name)                                      \
-    total_count++;                                      \
-    testname = strdup(#name);                           \
-    printf("\r%*.s", 50, " ");                          \
-    phylw("\r[Test] ", "%-4s", #name);                  \
-    failed = false;                                     \
-    reset_machine(&m, &memory[0], size);                \
-    source = readFile("test/" #name ".8085");           \
-    if(!run_source(source, &m, &memory[0], size, 0)){   \
-        pred(" [failed]");                              \
-        failed = true;                                  \
+#define TEST(name)                                                          \
+    total_count++;                                                          \
+    testname = strdup(#name);                                               \
+    printf("\r%*.s", 50, " ");                                              \
+    phylw("\r[Test] ", "%-4s", #name);                                      \
+    failed = false;                                                         \
+    reset_machine(&m, &memory[0], size);                                    \
+    source = readFile("test/" #name ".8085");                               \
+    if(source == NULL || !run_source(source, &m, &memory[0], size, 0)){     \
+        pred(" [failed]");                                                  \
+        failed = true;                                                      \
     }
 
 #define EXPECT(target, value)                                                   \
-    if(target != value){                                                        \
+    if(!failed && target != value){                                             \
         pred("\n[Test:%s] ", testname);                                         \
         printf(#target " -> expected : 0x%x, received : 0x%x\n", value, target);\
         failed = true;                                                          \
     }
 
 #define DECIDE()            \
-    free(source);           \
+    if(source)              \
+        free(source);       \
     free(testname);         \
     if(failed){             \
         pred(" [failed]");  \

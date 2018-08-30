@@ -1,6 +1,9 @@
+#include "bytecode.h"
+
+#ifdef USE_BCVM
+
 #include <stdio.h>
 
-#include "bytecode.h"
 #include "display.h"
 
 // Table containing strings corresponding
@@ -164,7 +167,7 @@ static disassembleFn disassembleTable[] = {
 
     dis_no_operand,         // BYTECODE_HLT
     
-    dis_no_operand,         // BYTECODE_IN
+    dis_hex8_operand,       // BYTECODE_IN
     dis_reg,                // BYTECODE_INR
     dis_reg,                // BYTECODE_INX
  
@@ -190,7 +193,7 @@ static disassembleFn disassembleTable[] = {
  
     dis_reg,                // BYTECODE_ORA
     dis_hex8_operand,       // BYTECODE_ORI
-    dis_no_operand,         // BYTECODE_OUT   
+    dis_hex8_operand,       // BYTECODE_OUT   
    
     dis_no_operand,         // BYTECODE_PCHL
     dis_reg,                // BYTECODE_POP
@@ -326,3 +329,5 @@ void bytecode_disassemble_chunk(u8 *memory, u16 pointer, u16 upto){
         disassembleTable[memory[pointer - 1]](memory, &pointer);
     }
 }
+
+#endif

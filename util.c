@@ -32,3 +32,35 @@ char* readFile(const char* path) {
     fclose(file);
     return buffer;
 }
+
+bool parse_hex_byte(const char *str, u8 *store){
+    char *end = NULL;
+    u32 val;
+    val = strtol(str, &end, 16);
+    if(*end != 0){
+        perr("Bad byte '%s'!", str);
+        return 0;
+    }
+    if(val > 0xff){
+        perr("Byte out of range : '%s'!", str);
+        return 0;
+    }
+    *store = val;
+    return 1;
+}
+
+bool parse_hex_16(const char *str, u16 *store){
+    char *end = NULL;
+    u32 addr;
+    addr = strtol(str, &end, 16);
+    if(*end != 0){
+        perr("Bad address '%s'!", str);
+        return 0;
+    }
+    if(addr > 0xffff){
+        perr("Address out of range : '%s'!", str);
+        return 0;
+    }
+    *store = addr;
+    return 1;
+}

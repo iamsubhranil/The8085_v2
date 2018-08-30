@@ -2,3 +2,4 @@
 build/
 .gdb_history
 vgcore.*
+parse_opcodes/

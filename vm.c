@@ -1,37 +1,20 @@
+#include "vm.h"
+
+#ifdef USE_BCVM
+
 #include <stdio.h>
 
-#include "vm.h"
 #include "bytecode.h"
 #include "display.h"
 
 #define GET_FLAG(x)             ((m->registers[REG_FL] >> x) & 1)
-void print_machine(Machine *m){
-    char regs[] = {'A', 'B', 'C', 'D', 'E', 'H', 'L'};
-    pgrn("\n[Registers]\t");
-    for(u8 i = 0;i < 7;i++)
-        pcyn("%4c\t", regs[i], " ");
-    pmgn("\n          \t");
-    for(u8 i = 0;i < 7;i++)
-        phmgn("", "0x%02x\t", m->registers[i]);
 
-    pgrn("\n[FLAGS] ");
-    char flags[] = {'S', 'Z', ' ', 'A', ' ', 'P', ' ', 'C'};
-    for(u8 i = 0;i < 8;i++)
-        pcyn("%c ", flags[i]);
-    pgrn("\n        ");
-    for(int i = 7;i >= 0;i--)
-        phred("", "%d ", GET_FLAG(i));
-    
-    phblue("\n[PC] ", "0x%0x", m->pc);
-    phylw("\n[SP] ", "0x%0x", m->sp);
-}
-
-void run(Machine *m, u8 *memory){
+void run(Machine *m, u8 *memory, u8 step){
     #define NEXT_BYTE()         memory[m->pc++]
     #define NEXT_DWORD()        ((u16)NEXT_BYTE() | ((u16)NEXT_BYTE() << 8))
     
     #define FROM_PAIR(x, y)     (((u16)m->registers[x] << 8) | m->registers[y])
-    #define FROM_HL()           FROM_PAIR(5, 6)
+    #define FROM_HL()           FROM_PAIR(REG_H, REG_L)
     
     #define SET_FLAG(x)         (m->registers[REG_FL] |= (1 << x))
     #define RESET_FLAG(x)       (m->registers[REG_FL] &= ~(1 << x))
@@ -603,13 +586,19 @@ void run(Machine *m, u8 *memory){
             case BYTECODE_in:
                 {
                     fflush(stdin);
-                    m->registers[REG_A] = getchar();
+                    u32 in;
+                    printf("\n[in:0x%x] ", NEXT_BYTE());
+                    scanf("%x", &in);
+                    m->registers[REG_A] = (u8)in;
                     break;
                 }
             case BYTECODE_out:
                 {
-                    printf("\n0x%x\n", m->registers[REG_A]);
-                    fflush(stdout);
+                    u8 addr = NEXT_BYTE();
+                    if(!m->issilent){
+                        printf("\n[out:0x%x] 0x%x\n", addr, m->registers[REG_A]);
+                        fflush(stdout);
+                    }
                     break;
                 }
             case BYTECODE_pchl:
@@ -688,12 +677,18 @@ void run(Machine *m, u8 *memory){
                     break;
                 }
             case BYTECODE_hlt:
+                m->isbroken = 0;
                 return;
             case BYTECODE_nop:
                 break;
             default:
                 break;
         }
+        if(machine_on_breakpoint(m, memory, step))
+            return;
         //print_machine(m);
     }
+    m->isbroken = 0;
 }
+
+#endif

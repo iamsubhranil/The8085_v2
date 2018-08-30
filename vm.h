@@ -1,6 +1,9 @@
 #pragma once
 
 #include "common.h"
+#include <time.h>
+
+#define MAX_BREAKPOINT_COUNT 15
 
 #define REG_A   0
 #define REG_B   1
@@ -31,7 +34,19 @@ typedef struct{
     u16 pc;
     // The stack pointer
     u16 sp;
+
+    u16 breakpoints[MAX_BREAKPOINT_COUNT];
+    u16 breakpoint_pointer;
+    u8 isbroken;    // denotes whether or not the machine is paused on a breakpoint
+    
+    // For Calibration
+    u8 issilent;    // don't print 'out's
+    struct timespec sleepfor;  // sleepfor this much time after each t-state to sync
 } Machine;
 
-void print_machine(Machine *m);
-void run(Machine *m, u8 *memory);
+void run(Machine *m, u8 *memory, u8 step);
+void machine_print(Machine *m);
+bool machine_add_breakpoint(Machine *m, u16 addr);
+bool machine_on_breakpoint(Machine *m, u8 *memory, u8 step);
+bool machine_remove_breakpoint(Machine *m, u16 addr);
+void machine_reset_breakpoints(Machine *m);
