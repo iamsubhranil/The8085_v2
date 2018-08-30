@@ -1,0 +1,19 @@
+// Divide two numbers
+// Dividend <-- 8100
+// Divisor  <-- 8101
+// Quotient --> 8102
+// Rem.     --> 8103
+lda 8100h
+lxi h, 8101h
+mov b, m
+mvi c, 00h
+loop: cmp b
+jc save
+inr c
+sub b
+jmp loop
+save: inx h
+mov m, c
+inx h
+mov m, a
+hlt
