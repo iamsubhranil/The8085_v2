@@ -36,7 +36,7 @@ your-favourite-c-compiler *.c Cell/cell.c -O3 -o the8085
 
 Run with :
 ```
-./mp8085
+./the8085
 ```
 
 The least `-std` I can compile this with is `gnu99`, which I think is enough of legacy support anyway. Also, this will fail to compile on any compiler which doesn't support `gnu` standards. Considering the OS to be Linux, this shouldn't be much of a problem.
@@ -124,6 +124,27 @@ To invoke the disassembler, use the `dis` keyword.
 It outputs three columns in the following format
 ```
 addr:   <assembly-code>     <hex-code>
+```
+
+Here is an example of the disassembly of `test/loop.8085`, loaded at `0xc050` :
+```
+>> load test/loop.8085 c050
+[load] 'test/loop.8085' loaded [0xc050 - 0xc065]
+>> dis c050 c065
+Address        Assembly		     Hex
+--------------------------------------------
+c050:   mvi	     a,   ffh	 3e ff
+c052:   dcr	     a       	 3d
+c053:    jz	 c065h       	 ca 65 c0
+c056:   mvi	     b,   ffh	 06 ff
+c058:   dcr	     b       	 05
+c059:    jz	 c052h       	 ca 52 c0
+c05c:   mvi	     c,   ffh	 0e ff
+c05e:   dcr	     c       	 0d
+c05f:    jz	 c058h       	 ca 58 c0
+c062:   jmp	 c05eh       	 c3 5e c0
+c065:   hlt	             	 76
+>> _
 ```
 #### Manipulating the memory
 You can manually set or view the content of a particular address in memory by using the `set` and `show` keywords. Keep in mind though all values are in hex.
