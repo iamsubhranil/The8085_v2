@@ -16,4 +16,4 @@ set(SOURCE_FILES    asm.c
                     neovm.c
                     Cell/cell.c)
                 
-add_executable(mp8085 ${SOURCE_FILES})
+add_executable(the8085 ${SOURCE_FILES})
