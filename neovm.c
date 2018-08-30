@@ -7,9 +7,13 @@
 #include <stdio.h>
 #include <time.h>
 
+static inline u8 next_byte(Machine *m, u8 *memory){
+    return memory[m->pc++];
+}
+
 #define GET_FLAG(x)             ((m->registers[REG_FL] >> x) & 1)
 
-#define NEXT_BYTE()         memory[m->pc++]
+#define NEXT_BYTE()         next_byte(m, memory)
 #define NEXT_DWORD()        ((u16)NEXT_BYTE() | ((u16)NEXT_BYTE() << 8))
 
 #define FROM_PAIR(x, y)     (((u16)m->registers[x] << 8) | m->registers[y])
