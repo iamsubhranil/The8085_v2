@@ -1,0 +1,9 @@
+// Input    <-- 8000
+// Output   --> 8001
+lxi h, 8000h
+mov a, m
+mov b, m
+rar
+xra b
+sta 8001h
+hlt

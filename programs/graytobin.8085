@@ -1,0 +1,25 @@
+// Input    <-- 8000
+// Output   --> 8001
+lxi h, 8000h
+mov c, m
+mvi a, 80h
+mvi b, 00h
+lxi d, 00h
+mvi l, 08h
+loop:
+mov h, a
+ana c
+xra d
+rrc 
+mov e, a
+rlc
+ora b
+mov b, a
+mov d, e
+mov a, h
+rrc
+dcr l
+jnz loop
+mov a, b
+sta 8001h
+hlt
