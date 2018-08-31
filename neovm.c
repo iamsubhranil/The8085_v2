@@ -134,6 +134,8 @@ static inline u8 next_byte(Machine *m, u8 *memory){
     u8 bak = m->registers[REG_A];   \
     u8 by = m->registers[reg];      \
     SUB();                          \
+    CHANGE_FLAG(FLG_C, bak < by);   \
+    CHANGE_FLAG(FLG_Z, by == bak);  \
     m->registers[REG_A] = bak;      \
     tstates = 4;
 
@@ -499,6 +501,8 @@ void run(Machine *m, u8 *memory, u8 step){
                     u8 bak = m->registers[REG_A];
                     u8 by = NEXT_BYTE();
                     SUB();
+                    CHANGE_FLAG(FLG_C, bak < by);
+                    CHANGE_FLAG(FLG_Z, by == bak);
                     m->registers[REG_A] = bak;
                     tstates = 7;
                     break;
