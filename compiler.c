@@ -153,7 +153,11 @@ CompilationStatus compile_unexpected_token(Token t){
 
 // Compiles a label and adds it to the labelTable
 CompilationStatus compile_label(Token t){
-    if(!consume(TOKEN_COLON, "Expected ':' after label!")){
+    advance();
+    if(presentToken.type != TOKEN_COLON){
+        perr("Expected ':' after '%.*s', received '%.*s'!", 
+                t.length, t.start,
+                presentToken.length, presentToken.start);
         token_highlight_source(t);
         token_highlight_source(presentToken);
         return PARSE_ERROR;
@@ -224,12 +228,15 @@ CompilationStatus compile_hex(u8 is16){
         token_highlight_source(t);
         return PARSE_ERROR;
     }
-    if(!consume(TOKEN_IDENTIFIER, "Expected 'h' after number!")){
+    advance();
+    if(presentToken.type != TOKEN_IDENTIFIER){
+        perr("Expected 'h' after number!");
+        token_highlight_source(previousToken);
         return PARSE_ERROR;
     }
     if(presentToken.length != 1 || presentToken.start[0] != 'h'){
         perr("Expected 'h' after number!");
-        token_highlight_source(presentToken);
+        token_highlight_source(previousToken);
         return PARSE_ERROR;
     }
     
@@ -583,6 +590,9 @@ void compiler_reset(){
 // The driver
 CompilationStatus compile(const char *source, u8 *mem, u16 size, u16 *off){
     initScanner(source);
+
+    presentToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
+    previousToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
     
     memory = mem;
     memSize = size;
