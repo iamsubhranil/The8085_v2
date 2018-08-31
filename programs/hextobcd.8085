@@ -1,0 +1,81 @@
+// Input    <-- 8000
+// 100      --> 8001
+// 10       --> 8002
+// 1        --> 8003
+
+lda 8000h
+lxi b, 0h
+mvi d, 0h
+mvi e, 8h
+loop:
+// Clear the carry
+stc
+cmc
+// Perform rotation
+ral
+mov d, a
+mov a, b
+ral
+mov b, a
+mov a, c
+ral
+mov c, a
+// If this was the 8th rotation,
+// exit without adjusting anything
+dcr e
+jz exit
+// Adjust nibble 0
+mov a, b
+ani 0fh
+cpi 04h         // Check whether it is greater than 4
+jc checknibble1 // Jump if lesser
+jz checknibble1 // Jump if equal
+// Add 3 to nibble 0
+mov a, b
+adi 3h
+mov b, a
+// Adjust nibble 1
+checknibble1:
+mov a, b
+ani 0f0h
+cpi 40h         // Check whether it is greater than 4
+jc checknibble2 // Jump if lesser
+jz checknibble2 // Jump if equal
+// Add 3 to nibble 1
+mov a, b
+adi 30h
+mov b, a
+// Adjust nibble 2
+checknibble2:
+mov a, c
+ani 0fh
+cpi 40h         // Check whether it is greater than 4
+jc cont         // Jump if lesser
+jz cont         // Jump if equal
+// Add 3 to nibble 2
+mov a, c
+adi 03h
+mov c, a
+cont:
+mov a, d
+jmp loop        // Go back to the loop
+exit:
+// Store 100th digit
+mov a, c
+sta 8001h
+// Store 10th digit
+mov a, b
+// Mask the upper part
+ani 0f0h
+// Rotate 4 times right
+rrc
+rrc
+rrc
+rrc
+sta 8002h
+// Store 1th digit
+mov a, b
+ani 0fh
+sta 8003h
+// Exit
+hlt
