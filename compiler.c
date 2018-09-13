@@ -298,19 +298,6 @@ static CompilationStatus compile_reg_or_mem(Token t){
 }
 
 // Compile an instruction of type
-// opcode regpair
-static CompilationStatus compile_regpair(Token t){
-    if(isregpair(advance())){
-        codegen_regpair(t, presentToken);
-        return COMPILE_OK;
-    }
-    else{
-        unexpected_operand("register pair", t, presentToken);
-        return PARSE_ERROR;
-    }
-}
-
-// Compile an instruction of type
 // opcode [regpair/sp]
 static CompilationStatus compile_regpair_or_sp(Token t){
     if(isregpair(advance())){ // check whether or not the next token is a register pair

@@ -4,6 +4,7 @@
 
 #include "asm.h"
 #include "compiler.h"
+#include "cosmetic.h"
 #include "display.h"
 #include "util.h"
 
@@ -127,7 +128,6 @@ static void parse_action(CellStringParts csp, Cell *cell){
             }
             break;
     }
-    cell_stringparts_free(csp);
     free(str);
 }
 
@@ -155,13 +155,93 @@ static void set_action(CellStringParts csp, Cell *c){
         perr("Wrong arguments!");
         phgrn("\n[Usage] ", "set <16-bit address>");
     }
-    cell_stringparts_free(csp);
 }
 
 static void asm_exit(CellStringParts csp, Cell *c1){
+    (void)csp;
     c1->run = 0;
-    cell_stringparts_free(csp);
 }
+
+static const char* asm_help =  
+            "'asm' is the inline compilation shell of The8085."
+            "\nIt can be invoked like the following : "
+            "\n" hcode(asm) "<address>"
+            "\nwhich will open the compilation shell with memory pointer set to <address>."
+            "\nYou can write any valid 8085 opcode there to have it compiled to the location specified at"
+            "\nthe line prefix. To write a statement starting with a label, prepend it the keyword 'label'"
+            "\nlike the following : "
+            "\n" hcode(jnz) "alabel"
+            "\n" hcode(...)
+            "\n" hcode(label) "alabel: hlt"
+            "\nThe memory pointer will only increase if the result of the compilation was successful."
+            "\nHowever if the compilation was unsuccessful, appropiate error messages will be printed"
+            "\nand no guarantees will be made on the content of memory at prefix address."
+            "\nTo set the memory pointer to any desired address, type '" hkw(set) " <16-bit address>'."
+            "\nTo exit from that shell, type '" hkw(exit) "'. For help on the opcodes, type '" hkw(help) "'"
+            "\nor '" hkw(help) " <opcode>'.";
+
+// Since it's not final, let's hide it behind a switch
+#ifdef ENABLE_OPCODE_HELP
+
+#define il(x)   "\nInstruction Length : " #x " byte(s)"
+#define mc(x,...)   "\nMachine cycle(s) : " #x ##__VA__ARGS__
+#define am(x)   "\nAddressing Mode : " #x
+
+/*  Opcode      Operand     I/L (Bytes)     M/C     T/S     Hex     A/M (Source, Destination)
+ *  ======      =======     ===========     ===     ===     ===     =========================
+ *
+ *
+ *
+ */
+
+
+#define op_m 0x1
+#define op_r 0x2
+#define op_8 0x4
+#define op_16 0x8
+#define op_sp 0x20
+#define op_psw 0x10
+
+typedef enum{
+    AM_r,
+    AM_ri,
+    AM_d,
+    AM_i,
+    AM_im,
+    AM_ipl
+} AddrMode;
+
+#define fl_s 0x1
+#define fl_z 0x2
+#define fl_a 0x4
+#define fl_p 0x8
+#define fl_c 0x10
+#define fl_all 0x20
+
+typedef struct{
+    u32 operand;    // upto 4 operand types
+    u8 il;
+    u32 mc;         // upto 4 different mcs
+    u32 ts;         // upto 4 different ts
+    u8 flags;
+    AddrMode ams, amd;
+    const char *desc;
+} InstructionFormat;
+
+#define frmi(op, i, m, t, fl, as, ad, s)   \
+    {.operand = op, .il = i, .mc = m, .ts = t, .flags = fl, .ams = AM_##as, .amd = AM_##ad, .desc = s}
+
+static InstructionFormat opcodes_help[] = {
+    frmi(op_8       , 2, 2, 7, fl_all, im, ipl, NULL),                      // ACI
+    frmi(op_r | op_m, 1, 1 | (2 << 8), 4 | (7 << 8), fl_all, r, ipl, NULL), // ADC
+    frmi(op_8       , 2, 2, 7, fl_all, im, ipl, NULL),                      // ADI
+    frmi(op_r | op_m, 1, 1 | (2 << 8), 4 | (7 << 8), fl_all, r, ipl, NULL), // ANA
+    frmi(op_8       , 2, 2, 7, fl_all, r, ipl, NULL),                       // ANI
+    frmi(op_16      , 3, 3, 18, 0, im, ipl, NULL),                          // CALL
+    frmi(op_16      , 3, 2 | (5 << 8), 9 | (18 << 8), 0, im, ipl, NULL)     // CC
+};
+
+#endif
 
 static void asm_action(CellStringParts csp, Cell *t){
     (void)t;
@@ -174,24 +254,13 @@ static void asm_action(CellStringParts csp, Cell *t){
             Cell editor = cell_init(prefix);
             u8 i = 0;
             #define INSTRUCTION(name, length)                                                       \
-                cell_add_keyword(&editor, #name, ANSI_COLOR_GREEN, descriptions[i++], parse_action);
+                cell_add_keyword(&editor, #name, descriptions[i++], parse_action);
             #include "instruction.h"
             #undef INSTRUCTION
-            cell_add_keyword(&editor, "exit", ANSI_COLOR_GREEN, "Exit from the assembler", asm_exit);
-            cell_add_keyword(&editor, "help", ANSI_COLOR_GREEN, "Show this help", cell_default_help);
-            cell_add_keyword(&editor, "label", ANSI_COLOR_GREEN, "Declare a label", label_action);
-            cell_add_keyword(&editor, "set", ANSI_COLOR_GREEN, "Set the memory pointer to the specified address", set_action);
-            
-            pinfo("Welcome to the assembler!");
-            pinfo("You can write any valid 8085 opcode here to have it compiled to the location specified at");
-            pinfo("the line prefix. To write a statement starting with a label, prepend it the keyword 'label',");
-            pinfo("like the following : \n");
-            pinfo("         jnz alabel");
-            pinfo("         ...");
-            pinfo("         label alabel: hlt\n");
-            pinfo("The memory pointer will only increase if the result of the compilation was successful.");
-            pinfo("To set the memory pointer to any desired address, type 'set <16-bit address>'.");
-            pinfo("To exit from this shell, type 'exit'. For help on the keywords, type 'help'.");
+            cell_add_keyword(&editor, "exit", "Exit from the assembler", asm_exit);
+            cell_add_keyword(&editor, "help", "Show this help", cell_default_help);
+            cell_add_keyword(&editor, "label", "Declare a label", label_action);
+            cell_add_keyword(&editor, "set", "Set the memory pointer to the specified address", set_action);
 
             cell_repl(&editor);
             compiler_report_pending();
@@ -202,11 +271,11 @@ static void asm_action(CellStringParts csp, Cell *t){
         perr("Wrong arguments!");
         phgrn("\n[Usage] ", "asm <16-bit address>"); 
     }
-    cell_stringparts_free(csp);
 }
 
 void asm_init(Cell *cell, u8 *mem){
-    CellKeyword casm = cell_create_keyword("asm", ANSI_COLOR_GREEN, "Invoke the assembler", asm_action);
+    CellKeyword casm = cell_create_keyword("asm", "Invoke the assembler", asm_action);
+    casm.longhelp = asm_help;
     cell_insert_keyword(cell, casm);
     memory = mem;
 }
