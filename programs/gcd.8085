@@ -1,0 +1,26 @@
+// X            <-- 8000h
+// Y            <-- 8001h
+// GCD(X, Y)    --> 8002h
+lxi h, 8000h
+mov a, m
+inx h
+mov b, m
+loop:
+cmp b
+jz save
+jc rev
+sub b
+jmp loop
+rev:
+mov c, b
+mov b, a
+mov a, c
+sub b
+mov c, b
+mov b, a
+mov a, c
+jmp loop
+save:
+inx h
+mov m, a
+hlt

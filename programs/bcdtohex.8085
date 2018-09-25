@@ -1,0 +1,24 @@
+// Input (in BCD)   <-- 8000
+// Output (in hex)  --> 8001
+lxi h, 8000h
+mov a, m
+mov b, a
+ani 0f0h
+jz save
+rrc
+rrc
+rrc
+rrc
+mov d, a
+xra a
+loop: adi 0ah
+dcr d
+jnz loop
+save:
+mov c, a
+mov a, b
+ani 0fh
+add c
+inx h
+mov m, a
+hlt

@@ -1,0 +1,15 @@
+// Number of terms (N)  <-- 8000
+// First N Fibonacci numbers stored consecutively from 8001
+lxi h, 8000h
+mov d, m
+xra a
+mvi b, 1h
+loop:
+inx h
+mov m, a
+mov c, a
+add b
+mov b, c
+dcr d
+jnz loop
+hlt

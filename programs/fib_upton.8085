@@ -1,0 +1,17 @@
+// Limit (N)    <-- 8000
+// Fibonacci numbers upto N stored consecutively from 8001
+lxi h, 8000h
+mov d, m
+xra a
+mvi b, 1h
+loop:
+cmp d
+jnc exit
+inx h
+mov m, a
+mov c, a
+add b
+mov b, c
+jmp loop
+exit:
+hlt
