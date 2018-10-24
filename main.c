@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "asm.h"
 #include "bytecode.h"
@@ -70,6 +71,8 @@ void set_action(CellStringParts parts, Cell *cell){
     phgrn("\n[Usage]", " set <16-bit memory address> <8-bit value>");
 }
 
+static int load_successful = 0;
+
 void load_action(CellStringParts parts, Cell *cell){
     (void)cell;
     u16 addr;
@@ -80,6 +83,7 @@ void load_action(CellStringParts parts, Cell *cell){
         if(source != NULL){
             memory_pointer = addr;
             compiler_reset();
+            load_successful = 0;
             stat = compile(source, &memory[0], 0xffff, &memory_pointer);
             switch(stat){
                 case LABEL_FULL:
@@ -97,8 +101,18 @@ void load_action(CellStringParts parts, Cell *cell){
                     perr("Bytecode offset exceeded its size! Try loading the program at a lower address!");
                     perr("Compilation aborted!");
                     break;
+                case EMPTY_PROGRAM:
+                    perr("Program contains no valid instructions!");
+                    perr("Compilation aborted!");
+                    break;
+                case NO_HLT:
+                    perr("Program does not contain any halt instruction!");
+                    perr("This will surely result in an infinite loop!");
+                    perr("Fix this, and then recompile the program.");
+                    break;
                 default:
                     phgrn("\n[load]"," '%s' loaded " ANSI_FONT_BOLD "[0x%x - 0x%x]", parts.parts[1], addr, memory_pointer - 1);
+                    load_successful = 1;
                     break;
             }
             free(source);
@@ -331,12 +345,33 @@ static const char *longhelp[] = {
         "\n" husage(calibrate),
 };
 
-int main(){
+int main(int argc, char *argv[]){
+#ifndef __AFL_COMPILER
     dump_init();
+#endif
     init_machine();
 #ifdef ENABLE_TESTS
     test_all();
 #endif
+    if(argc == 2){
+        CellStringParts csp;
+        csp.part_count = 3;
+        csp.parts = (char **)malloc(sizeof(char*) * 3);
+        pdbg("Filename : %s\n", argv[1]);
+        csp.parts[1] = strdup(argv[1]);
+        csp.parts[2] = strdup("0x0100");
+        load_action(csp, NULL);
+        free(csp.parts[1]);
+        if(load_successful) {
+            bytecode_disassemble_chunk(&memory[0], 0x0100, memory_pointer - 1);
+            csp.part_count = 2;
+            csp.parts[1] = csp.parts[2];
+            exec_action(csp, NULL);
+        }
+        free(csp.parts[2]);
+        free(csp.parts);
+        return 0;
+    }
     Cell cell = cell_init(ANSI_FONT_BOLD ">>" ANSI_COLOR_RESET);
     CellKeyword exec = cell_create_keyword("exec", "Execute the instructions from the specified address", exec_action);
     exec.longhelp = longhelp[0];

@@ -47,6 +47,11 @@ static u8 *memory = NULL;
 // by triggering this
 static u8 memory_full = 0;
 
+// Denotes whether there is atleast one halt
+// instruction in the program, which otherwise
+// may result in an infinite execution loop
+static u8 has_halt = 0;
+
 // Consumed tokens
 static Token presentToken = {}, previousToken = {};
 
@@ -263,6 +268,8 @@ CompilationStatus compile_hex(u8 is16){
 
 // Compile an instruction with no operand
 static CompilationStatus compile_no_operand(Token t){
+    if(has_halt == 0)
+        has_halt = (t.type == TOKEN_hlt);
     codegen_no_op(t);
     return COMPILE_OK;
 }
@@ -569,6 +576,7 @@ void compiler_reset(){
     offset = NULL;
     memSize = 0;
     memory_full = 0;
+    has_halt = 0;
 
     presentToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
     previousToken = (Token){TOKEN_ERROR, NULL, 0, 0, 0};
@@ -583,6 +591,7 @@ CompilationStatus compile(const char *source, u8 *mem, u16 size, u16 *off){
     
     memory = mem;
     memSize = size;
+    u16 offbak = *off;
     offset = off;
 
     Token t;
@@ -592,6 +601,12 @@ CompilationStatus compile(const char *source, u8 *mem, u16 size, u16 *off){
 
     if(memory_full)
         lastStatus = MEMORY_FULL;
+
+    if(offbak == *offset)
+        lastStatus = EMPTY_PROGRAM; 
+
+    if(has_halt == 0)
+        lastStatus = NO_HLT;
 
     if(lastStatus == COMPILE_OK)
         return patch_labels();
