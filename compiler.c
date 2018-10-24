@@ -599,13 +599,13 @@ CompilationStatus compile(const char *source, u8 *mem, u16 size, u16 *off){
     while(lastStatus == COMPILE_OK && !memory_full && (t = scanToken()).type != TOKEN_EOF)
         lastStatus = compilationTable[t.type](t);
 
-    if(memory_full)
+    if(lastStatus == COMPILE_OK && memory_full)
         lastStatus = MEMORY_FULL;
 
-    if(offbak == *offset)
+    if(lastStatus == COMPILE_OK && offbak == *offset)
         lastStatus = EMPTY_PROGRAM; 
 
-    if(has_halt == 0)
+    if(lastStatus == COMPILE_OK && has_halt == 0)
         lastStatus = NO_HLT;
 
     if(lastStatus == COMPILE_OK)
