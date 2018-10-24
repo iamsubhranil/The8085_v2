@@ -1,0 +1,19 @@
+lxi h, 8001h
+mov a, m
+lxi h, 8003h
+add m
+lxi h, 8005h
+mov m, a
+lxi h, 8000h
+mov a, m
+lxi h, 8002h
+adc m
+lxi h, 8004h
+mov m, a
+mvi d, 00h
+jnc save
+inr d
+save:
+lxi h, 8006h
+mov m, d
+hlt
