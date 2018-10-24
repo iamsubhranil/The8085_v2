@@ -113,11 +113,13 @@ static void parse_action(CellStringParts csp, Cell *cell){
         case PARSE_ERROR:
         case LABEL_FULL:
         case MEMORY_FULL:
+        case EMPTY_PROGRAM:
             perr("Compilation aborted!");
             pointer = pbak;
             break;
         case LABELS_PENDING:
             pinfo("To avoid erroneous results, either declare or manually patch the label before execution.");
+        case NO_HLT:
         case COMPILE_OK:
             update_prefix();
             free(cell->prefix);

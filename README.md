@@ -38,6 +38,14 @@ Run with :
 ```
 ./the8085
 ```
+or
+```
+./the8085 <file_to_run>
+```
+or
+```
+./the8085 <file_to_run> <address_to_load>
+```
 
 The least `-std` I can compile this with is `gnu99`, which I think is enough of legacy support anyway. Also, this will fail to compile on any compiler which doesn't support `gnu` standards. Considering the OS to be Linux, this shouldn't be much of a problem.
 
@@ -59,6 +67,19 @@ The assembler will output various error messages with full source highlighting i
 ```
 
 If the result of compilation is unsuccessful, no guarantees are made on the content of the memory starting from the specified  `<memory-address-to-store>`.
+
+This mode is directly invoked if you run the program with an argument as `file-to-run`. In that case, the compiled code is executed directly, no shell is provided, and the program exits as soon as the code finishes executing.
+
+That way of invokation is exactly similar as doing the following :
+```
+>> load <file-to-run> 0x100
+[load] <file-to-run> loaded [0x100 - <ending-address>]
+>> dis 0x100 <ending-address>
+...
+>> exec 0x100
+```
+
+Optionally, if you also provide an `address-to-load` as the second argument, the consecutive `load`, `dis` and `exec` starts from there.
 
 ##### 2. Inline mode
 

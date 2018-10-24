@@ -7,6 +7,8 @@ typedef enum{
     MEMORY_FULL,
     LABEL_FULL,
     LABELS_PENDING,
+    EMPTY_PROGRAM,
+    NO_HLT,
     COMPILE_OK
 } CompilationStatus;
 

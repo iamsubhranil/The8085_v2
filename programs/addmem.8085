@@ -1,0 +1,13 @@
+lxi h, 8000h
+mov a, m
+inx h
+add m
+inx h
+mov m, a
+mvi d, 00h
+jnc save
+inr d
+save:
+inx h
+mov m, d
+hlt
