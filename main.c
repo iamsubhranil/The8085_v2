@@ -238,13 +238,12 @@ void brkrm_action(CellStringParts cp, Cell *cell){
 }
 
 void calb_action(CellStringParts csp, Cell *c){
-    (void)c;
-    calibrate(&machine);
-    cell_stringparts_free(csp);
+    (void)c, (void)csp;
+    calibrate(&machine); 
 }
 
 void exit_action(CellStringParts parts, Cell *cell){
-    cell_stringparts_free(parts);
+    (void)parts;
     cell->run = 0;
 }
 

@@ -134,12 +134,13 @@ static void parse_action(CellStringParts csp, Cell *cell){
 }
 
 static void label_action(CellStringParts csp, Cell *c){
-    free(csp.parts[0]);
+    char* bak = csp.parts[0];
     for(siz i = 0;i < csp.part_count - 1;i++){
         csp.parts[i] = csp.parts[i + 1];
     }
     csp.part_count--;
     parse_action(csp, c);
+    csp.parts[csp.part_count] = bak;
 }
 
 static void set_action(CellStringParts csp, Cell *c){
