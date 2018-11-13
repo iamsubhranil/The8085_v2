@@ -1,10 +1,9 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
 #include <inttypes.h>
 #include <stdbool.h>
-
+#include <stdint.h>
+#include <stdlib.h>
 
 typedef int64_t i64;
 #define Pi64 PRId64
