@@ -3,27 +3,13 @@
 #ifdef USE_NEOVM
 
 #include "display.h"
+#include "scanner.h"
 #include <stdio.h>
-
-// Table containing strings corresponding
-// to each bytecode.
-// Extra strings for the unambiguous
-// instructions of the vm.
-const char *bytecode_strings[] = {
-#define INSTRUCTION(name, length) #name,
-#include "instruction.h"
-#undef INSTRUCTION
-
-    "lxi   sp", "dcx   sp",  "inx   sp",  "mov_r   ", "mvi   m",
-    "mov   m",  "dcr   m",   "inr   m",   "sub   m",  "add   m",
-    "ana   m",  "ora   m",   "xra   m",   "cmp   m",  "adc   m",
-    "dad   sp", "pop   psw", "push  psw", "sbb   m",
-};
 
 // Returns the string corresponding to
 // a bytecode
 const char *bytecode_get_string(Bytecode code) {
-	return bytecode_strings[code];
+	return instruction_keywords[code].str;
 }
 
 static u16 intrpointer = 0;
