@@ -64,3 +64,43 @@ bool parse_hex_16(const char *str, u16 *store) {
 	*store = addr;
 	return 1;
 }
+
+// clang-format off
+
+int get_string_index(Keyword *keywords, siz numKeywords, const char *string, siz length) {
+    siz start = 0, end = 0;
+    // Find the initial boundary
+    while(start < numKeywords &&                            // the array is not out of bounds       and
+            (string[0] > keywords[start].str[0]             // ( there are still letters to come      or
+             || (string[0] == keywords[start].str[0]        //    ( this is the required letter          and
+                 && length != keywords[start].length))) {   //      the length doesn't match))
+        start++;
+    }
+    if(start == numKeywords                                 // array exhausted          or 
+            || string[0] != keywords[start].str[0])         // this is not the initial letter that was searched
+        return -1;
+    end = start;
+    // Find the terminate boundary
+    while(end < numKeywords                                 // the array is not out of bounds       and 
+            && keywords[end].str[0] == string[0]            // the letters match                    and
+            /*&& keywords[end].length == length*/)          // the lengths match
+        end++;
+
+    siz temp = start, matching = 1;
+    while(temp < end && matching < length) {                    // the search is in boundary and not all letters have been checked
+        if(keywords[temp].str[matching] == string[matching])    // if: present letter matches
+            matching++;                                         // then: check for the next letter
+        else{                                                   // else: present letter doesn't match
+            temp++;                                             // so: check for the next word
+            while(temp < end && keywords[temp].length != length)
+                temp++;
+        }
+    }
+
+    if(matching == length)                                  // all letters have matched
+        return temp;
+
+    return -1;
+}
+
+// clang-format on
