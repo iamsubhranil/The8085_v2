@@ -29,7 +29,10 @@ typedef enum {
 	BYTECODE_sbb_M,    // sbb m
 } Bytecode;
 
-const char *bytecode_get_string(Bytecode code);
+// Should be defined by implementation,
+// contains string of the i'th ins
+extern const char *bytecode_strings[];
+const char *       bytecode_get_string(Bytecode code);
 // disassemble only one instruction
 void bytecode_disassemble(u8 *memory, u16 pointer);
 // continue disassembly until pointer < upto

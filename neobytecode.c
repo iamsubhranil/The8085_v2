@@ -5,6 +5,27 @@
 #include "display.h"
 #include <stdio.h>
 
+// Table containing strings corresponding
+// to each bytecode.
+// Extra strings for the unambiguous
+// instructions of the vm.
+const char *bytecode_strings[] = {
+#define INSTRUCTION(name, length) #name,
+#include "instruction.h"
+#undef INSTRUCTION
+
+    "lxi   sp", "dcx   sp",  "inx   sp",  "mov_r   ", "mvi   m",
+    "mov   m",  "dcr   m",   "inr   m",   "sub   m",  "add   m",
+    "ana   m",  "ora   m",   "xra   m",   "cmp   m",  "adc   m",
+    "dad   sp", "pop   psw", "push  psw", "sbb   m",
+};
+
+// Returns the string corresponding to
+// a bytecode
+const char *bytecode_get_string(Bytecode code) {
+	return bytecode_strings[code];
+}
+
 static u16 intrpointer = 0;
 
 void bytecode_disassemble_in_context(u8 *memory, u16 pointer, Machine *m) {

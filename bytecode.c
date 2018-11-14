@@ -10,7 +10,7 @@
 // to each bytecode.
 // Extra strings for the unambiguous
 // instructions of the vm.
-static const char *bytecode_strings[] = {
+const char *bytecode_strings[] = {
 #define INSTRUCTION(name, length) #name,
 #include "instruction.h"
 #undef INSTRUCTION
