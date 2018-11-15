@@ -7,6 +7,7 @@ set(SOURCE_FILES    asm.c
                     compiler.c
                     display.c
                     dump.c
+                    instruction_details.c
                     machine.c
                     main.c
                     scanner.c

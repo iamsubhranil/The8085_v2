@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "asm.h"
 #include "compiler.h"
 #include "cosmetic.h"
 #include "display.h"
+#include "instruction_details.h"
+#include "scanner.h"
 #include "util.h"
 
 static u8 *        memory         = NULL;
@@ -183,72 +186,27 @@ static const char* asm_help =
             "\nTo exit from that shell, type '" hkw(exit) "'. For help on the opcodes, type '" hkw(help) "'"
             "\nor '" hkw(help) " <opcode>'.";
 
-// Since it's not final, let's hide it behind a switch
-#ifdef ENABLE_OPCODE_HELP
-
-#define il(x)   "\nInstruction Length : " #x " byte(s)"
-#define mc(x,...)   "\nMachine cycle(s) : " #x ##__VA__ARGS__
-#define am(x)   "\nAddressing Mode : " #x
-
-/*  Opcode      Operand     I/L (Bytes)     M/C     T/S     Hex     A/M (Source, Destination)
- *  ======      =======     ===========     ===     ===     ===     =========================
- *
- *
- *
- */
-
-
-#define op_m 0x1
-#define op_r 0x2
-#define op_8 0x4
-#define op_16 0x8
-#define op_sp 0x20
-#define op_psw 0x10
-
-typedef enum{
-    AM_r,
-    AM_ri,
-    AM_d,
-    AM_i,
-    AM_im,
-    AM_ipl
-} AddrMode;
-
-#define fl_s 0x1
-#define fl_z 0x2
-#define fl_a 0x4
-#define fl_p 0x8
-#define fl_c 0x10
-#define fl_all 0x20
-
-typedef struct{
-    u32 operand;    // upto 4 operand types
-    u8 il;
-    u32 mc;         // upto 4 different mcs
-    u32 ts;         // upto 4 different ts
-    u8 flags;
-    AddrMode ams, amd;
-    const char *desc;
-} InstructionFormat;
-
-#define frmi(op, i, m, t, fl, as, ad, s)   \
-    {.operand = op, .il = i, .mc = m, .ts = t, .flags = fl, .ams = AM_##as, .amd = AM_##ad, .desc = s}
-
-static InstructionFormat opcodes_help[] = {
-    frmi(op_8       , 2, 2, 7, fl_all, im, ipl, NULL),                      // ACI
-    frmi(op_r | op_m, 1, 1 | (2 << 8), 4 | (7 << 8), fl_all, r, ipl, NULL), // ADC
-    frmi(op_8       , 2, 2, 7, fl_all, im, ipl, NULL),                      // ADI
-    frmi(op_r | op_m, 1, 1 | (2 << 8), 4 | (7 << 8), fl_all, r, ipl, NULL), // ANA
-    frmi(op_8       , 2, 2, 7, fl_all, r, ipl, NULL),                       // ANI
-    frmi(op_16      , 3, 3, 18, 0, im, ipl, NULL),                          // CALL
-    frmi(op_16      , 3, 2 | (5 << 8), 9 | (18 << 8), 0, im, ipl, NULL)     // CC
-};
-
-#endif
-
 // clang-format on
 
+static void help_action(CellStringParts csp, Cell *t) {
+	// if no argument is given, pass to the default
+	// handler
+	cell_default_help(csp, t);
+	if(csp.part_count > 1) {
+		char *key     = csp.parts[1];
+		siz   keysize = strlen(key);
+		int   idx     = get_string_index(instruction_keywords,
+                                   instruction_keywords_count, key, keysize);
+		if(idx != -1) {
+			printf("\n");
+			instruction_print_details(idx);
+			return;
+		}
+	}
+}
+
 static void asm_action(CellStringParts csp, Cell *t) {
+	srand(time(NULL));
 	(void)t;
 	if(csp.part_count > 1) {
 		u16 start;
@@ -264,8 +222,7 @@ static void asm_action(CellStringParts csp, Cell *t) {
 #undef INSTRUCTION
 			cell_add_keyword(&editor, "exit", "Exit from the assembler",
 			                 asm_exit);
-			cell_add_keyword(&editor, "help", "Show this help",
-			                 cell_default_help);
+			cell_add_keyword(&editor, "help", "Show this help", help_action);
 			cell_add_keyword(&editor, "label", "Declare a label", label_action);
 			cell_add_keyword(&editor, "set",
 			                 "Set the memory pointer to the specified address",
