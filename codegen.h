@@ -4,9 +4,9 @@
 
 // Interface for code generator
 // ============================
-// The compiler only calls these functions,
-// using the flag USE_BCVM/USE_NEOVM, the
-// actual generator can be toggled.
+// The compiler only calls these functions
+// to maintain a level of abstraction
+// with the code generator.
 
 void codegen_no_op(Token op);
 void codegen_reg(Token op, Token reg);

@@ -1,7 +1,4 @@
 #include "common.h"
-
-#ifdef USE_NEOVM
-
 #include "codegen.h"
 #include "compiler.h"
 #include "display.h"
@@ -170,5 +167,3 @@ void codegen_mov_r_m(Token dest) {
 void codegen_mov_m_r(Token source) {
 	compiler_write_byte(0x40 | (6 << 3) | codegen_get_reg_number(source));
 }
-
-#endif

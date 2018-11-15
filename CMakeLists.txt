@@ -1,8 +1,6 @@
 set(SOURCE_FILES    asm.c
-                    bytecode.c
                     neobytecode.c
                     calibrate.c
-                    codegen_bcvm.c
                     codegen_neovm.c
                     compiler.c
                     display.c
@@ -13,7 +11,6 @@ set(SOURCE_FILES    asm.c
                     scanner.c
                     test.c
                     util.c
-                    vm.c
                     neovm.c
                     Cell/cell.c)
                 

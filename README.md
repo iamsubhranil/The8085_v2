@@ -31,8 +31,6 @@ your-favourite-c-compiler *.c Cell/cell.c -O3 -o the8085
 ```
 ##### Compile time flags
 1. `ENABLE_TESTS` : Run all tests before initializing the REPL to ensure consistency of the virtual machine. All of these tests *must* pass in each commit.
-2. `USE_BCVM` (deprecated) : Use the initial bytecode vm, which does not support original 8085 opcodes, for execution. This vm is most likely broken now and will be removed in a future commit.
-3. `USE_NEOVM` : Use the vm which runs upon original 8085 opcodes, which is the default now.
 
 Run with :
 ```

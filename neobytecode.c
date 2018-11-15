@@ -1,7 +1,4 @@
 #include "bytecode.h"
-
-#ifdef USE_NEOVM
-
 #include "display.h"
 #include "scanner.h"
 #include <stdio.h>
@@ -1323,5 +1320,3 @@ void bytecode_disassemble(u8 *memory, u16 pointer) {
 	}
 	printf(ANSI_COLOR_RESET);
 }
-
-#endif
