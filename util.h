@@ -7,6 +7,7 @@
 char *readFile(const char *path);
 bool  parse_hex_byte(const char *str, u8 *store);
 bool  parse_hex_16(const char *str, u16 *store);
+i64   random_at_most(i64 n);
 
 // Since it is likely that the search function
 // will be called multiple times, it is efficient

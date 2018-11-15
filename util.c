@@ -104,3 +104,23 @@ int get_string_index(Keyword *keywords, siz numKeywords, const char *string, siz
 }
 
 // clang-format on
+
+// Assumes 0 <= max <= RAND_MAX
+// Returns in the closed interval [0, max]
+i64 random_at_most(i64 max) {
+	i64
+	    // max <= RAND_MAX < ULONG_MAX, so this is okay.
+	    num_bins = max + 1,
+	    num_rand = (i64)RAND_MAX + 1, bin_size = num_rand / num_bins,
+	    defect = num_rand % num_bins;
+
+	i64 x;
+	do {
+		x = random();
+	}
+	// This is carefully written not to overflow
+	while(num_rand - defect <= (i64)x);
+
+	// Truncated division is intentional
+	return x / bin_size;
+}
