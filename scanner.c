@@ -4,6 +4,7 @@
 #include "common.h"
 #include "display.h"
 #include "scanner.h"
+#include "util.h"
 
 typedef struct {
 	const char *start;
@@ -115,60 +116,27 @@ static void skipWhitespace() {
 	}
 }
 
-typedef struct {
-	const char *str;
-	siz         length;
-	TokenType   token;
-} Keyword;
-
-static Keyword keywords[] = {
-#define INSTRUCTION(name, length) {#name, length, TOKEN_##name},
+static TokenType keyword_types[] = {
+#define INSTRUCTION(name, length) TOKEN_##name,
 #include "instruction.h"
 #undef INSTRUCTION
 };
 
-static siz numKeywords = sizeof(keywords) / sizeof(Keyword);
+Keyword instruction_keywords[] = {
+#define INSTRUCTION(name, length) {#name, length},
+#include "instruction.h"
+#undef INSTRUCTION
+};
 
-// clang-format off
+siz instruction_keywords_count = sizeof(instruction_keywords) / sizeof(Keyword);
 
-static TokenType identifierType(){
-    u64 length = scanner.current - scanner.start;
-    u64 start = 0, end = 0;
-    // Find the initial boundary
-    while(start < numKeywords &&                            // the array is not out of bounds       and
-            (scanner.start[0] > keywords[start].str[0]      // ( there are still letters to come      or
-             || (scanner.start[0] == keywords[start].str[0] //    ( this is the required letter          and
-                 && length != keywords[start].length))){    //      the length doesn't match))
-        start++;
-    }
-    if(start == numKeywords                                 // array exhausted          or 
-            || scanner.start[0] != keywords[start].str[0])  // this is not the initial letter that was searched
-        return TOKEN_IDENTIFIER;
-    end = start;
-    // Find the terminate boundary
-    while(end < numKeywords                                 // the array is not out of bounds       and 
-            && keywords[end].str[0] == scanner.start[0]     // the letters match                    and
-            /*&& keywords[end].length == length*/)          // the lengths match
-        end++;
-
-    u64 temp = start, matching = 1;
-    while(temp < end && matching < length){                 // the search is in boundary and not all letters have been checked
-        if(keywords[temp].str[matching] == scanner.start[matching])     // if: present letter matches
-            matching++;                                                 // then: check for the next letter
-        else{                                                           // else: present letter doesn't match
-            temp++;                                                     // so: check for the next word
-            while(temp < end && keywords[temp].length != length)
-                temp++;
-        }
-    }
-
-    if(matching == length)                                  // all letters have matched
-        return keywords[temp].token;
-
-    return TOKEN_IDENTIFIER;
+static TokenType identifierType() {
+	int idx = get_string_index(instruction_keywords, instruction_keywords_count,
+	                           scanner.start, scanner.current - scanner.start);
+	if(idx == -1)
+		return TOKEN_IDENTIFIER;
+	return keyword_types[idx];
 }
-
-// clang-format on
 
 static Token identifier() {
 	while(isAlpha(peek()) || isDigit(peek())) advance();

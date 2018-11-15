@@ -1,7 +1,4 @@
 #include "vm.h"
-
-#ifdef USE_NEOVM
-
 #include "common.h"
 #include "display.h"
 #include <stdio.h>
@@ -1624,5 +1621,3 @@ void run(Machine *m, u8 *memory, u8 step) {
 	}
 	m->isbroken = 0;
 }
-
-#endif

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util.h"
+
 typedef enum {
 	// Single-character tokens.
 	TOKEN_COLON,
@@ -26,6 +28,10 @@ typedef struct {
 	int         line;
 	int         chidx;
 } Token;
+
+// Globally accessible keyword dictionary
+extern Keyword instruction_keywords[];
+extern siz     instruction_keywords_count;
 
 void  initScanner(const char *source);
 Token scanToken();

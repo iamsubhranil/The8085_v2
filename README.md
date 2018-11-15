@@ -31,8 +31,6 @@ your-favourite-c-compiler *.c Cell/cell.c -O3 -o the8085
 ```
 ##### Compile time flags
 1. `ENABLE_TESTS` : Run all tests before initializing the REPL to ensure consistency of the virtual machine. All of these tests *must* pass in each commit.
-2. `USE_BCVM` (deprecated) : Use the initial bytecode vm, which does not support original 8085 opcodes, for execution. This vm is most likely broken now and will be removed in a future commit.
-3. `USE_NEOVM` : Use the vm which runs upon original 8085 opcodes, which is the default now.
 
 Run with :
 ```
@@ -101,19 +99,7 @@ The real beauty of this mode lies on the `help` keyword and autocomplete feature
 
 Here is an example how this mode works :
 ```
->> asm c050  
-[Info] Welcome to the assembler!
-[Info] You can write any valid 8085 opcode here to have it compiled to the location specified at
-[Info] the line prefix. To write a statement starting with a label, prepend it the keyword 'label',
-[Info] like the following : 
-
-[Info]          jnz alabel
-[Info]          ...
-[Info]          label alabel: hlt
-
-[Info] The memory pointer will only increase if the result of the compilation was successful.
-[Info] To set the memory pointer to any desired address, type 'set <16-bit address>'.
-[Info] To exit from this shell, type 'exit'. For help on the keywords, type 'help'.
+>> asm c050 
 [0xc050] >> xra a
 0xc050: 0xaf
 [0xc051] >> mvi a, 05h
@@ -133,6 +119,7 @@ Here is an example how this mode works :
 >> _
 ```
 
+You can even get the details of a specific opcode, including types and number of operands, instruction length, machine cycles and t-states that it takes by typing `help <opcode>` inside the shell. For a bonus, `The8085` will generate a random example for you on how to use this opcode as well, *at runtime*.
 
 #### Disassembler
 The disassembler takes two addresses as inputs - the starting and ending addresses to disassemble between - decomposes every byte, and shows the corresponding assembly code to the user. To avoid the hassle of manually finding a `hlt` to stop disassembly, it also takes the ending address explicitly. The output is unknown if you try to disassemble the content of an address which is not a valid 8085 opcode.

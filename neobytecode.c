@@ -1,9 +1,13 @@
 #include "bytecode.h"
-
-#ifdef USE_NEOVM
-
 #include "display.h"
+#include "scanner.h"
 #include <stdio.h>
+
+// Returns the string corresponding to
+// a bytecode
+const char *bytecode_get_string(Bytecode code) {
+	return instruction_keywords[code].str;
+}
 
 static u16 intrpointer = 0;
 
@@ -1316,5 +1320,3 @@ void bytecode_disassemble(u8 *memory, u16 pointer) {
 	}
 	printf(ANSI_COLOR_RESET);
 }
-
-#endif
