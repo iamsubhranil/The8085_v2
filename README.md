@@ -155,15 +155,24 @@ c065:   hlt	             	 76
 >> _
 ```
 #### Manipulating the memory
-You can manually set or view the content of a particular address in memory by using the `set` and `show` keywords. Keep in mind though all values are in hex.
+You can manually set or view the content of a range of addresses in memory by using the `set` and `show` keywords. Keep in mind though all values are in hex.
 ```
->> show 8000 
-[show] 8000: 0x0
->> set 8000 1
-[set] Old value : 0x0
-[set] New value : 0x1
 >> show 8000
-[show] 8000: 0x1
+[show] 8000: 0x3b
+>> show 8000 8004
+[show] 8000: 0x3b
+[show] 8001: 0x65
+[show] 8002: 0xb7
+[show] 8003: 0x8e
+[show] 8004: 0x1f
+>> set 8000 3f
+[set] 0x8000: 0x3b -> 0x3f
+>> set 8000 2c 4b 62 8a 39
+[set] 0x8000: 0x3f -> 0x2c
+[set] 0x8001: 0x65 -> 0x4b
+[set] 0x8002: 0xb7 -> 0x62
+[set] 0x8003: 0x8e -> 0x8a
+[set] 0x8004: 0x1f -> 0x39
 >> _
 ```
 #### Execution and debugging
