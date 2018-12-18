@@ -1,19 +1,29 @@
-lxi h, 8001h
-mov a, m
-lxi h, 8003h
-add m
-lxi h, 8005h
+// c000 - c001 <-- a
+// c002 - c003 <-- b
+// c004        <-- carry
+// c005 - c006 <-- (a + b)
+lxi h, 0c000h
+mov b, m
+inx h
+mov c, m
+inx h
+mov d, m
+inx h
+mov e, m
+mov a, e
+add c
+inx h
+inx h       // increment twice to store carry first, then higher
+inx h       // order byte, followed by the lower order byte
 mov m, a
-lxi h, 8000h
-mov a, m
-lxi h, 8002h
-adc m
-lxi h, 8004h
+mov a, d
+adc b
+dcx h       // decrement to point to the higher order byte
 mov m, a
-mvi d, 00h
+dcx h       // point to carry
+mvi b, 00h
 jnc save
-inr d
+inr b
 save:
-lxi h, 8006h
-mov m, d
+mov m, b
 hlt

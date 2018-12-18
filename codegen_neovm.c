@@ -1,5 +1,5 @@
-#include "common.h"
 #include "codegen.h"
+#include "common.h"
 #include "compiler.h"
 #include "display.h"
 

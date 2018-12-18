@@ -47,17 +47,30 @@ void exec_action(CellStringParts parts, Cell *cell) {
 
 void show_action(CellStringParts parts, Cell *cell) {
 	(void)cell;
-	u16 addr;
+	u16 start, end;
 	if(parts.part_count > 1) {
-		if(parse_hex_16(parts.parts[1], &addr)) {
-			pgrn("\n[show]");
-			pred(" %x: ", addr);
-			printf("0x%x", memory[addr]);
+		if(parse_hex_16(parts.parts[1], &start)) {
+			end = start;
+
+			if(parts.part_count == 3) {
+				if(!parse_hex_16(parts.parts[2], &end)) {
+					goto showusg;
+				}
+			}
+
+			while(start != (end + 1)) {
+				pgrn("\n[show]");
+				pred(" %04x: ", start);
+				printf("0x%02x", memory[start]);
+				start++;
+			}
+
 			return;
 		}
 	} else
 		perr("Specify the address to inspect!");
-	usage("show <16-bit memory address>");
+showusg:
+	usage("show <from address> [<to address>]");
 }
 
 void set_action(CellStringParts parts, Cell *cell) {
@@ -65,16 +78,25 @@ void set_action(CellStringParts parts, Cell *cell) {
 	u16 addr;
 	u8  val;
 	if(parts.part_count > 2) {
-		if(parse_hex_16(parts.parts[1], &addr) &&
-		   parse_hex_byte(parts.parts[2], &val)) {
-			phgrn("\n[set]", " Old value : 0x%x", memory[addr]);
-			memory[addr] = val;
-			phgrn("\n[set]", " New value : 0x%x", memory[addr]);
+		if(parse_hex_16(parts.parts[1], &addr)) {
+			int i = 2;
+			while(i < parts.part_count) {
+				if(parse_hex_byte(parts.parts[i], &val)) {
+					u8 old       = memory[addr];
+					memory[addr] = val;
+					pgrn("\n[set]");
+					pred(" 0x%04x: ", addr);
+					printf("0x%02x -> 0x%02x", old, memory[addr]);
+				} else
+					return;
+				i++;
+				addr++;
+			}
 			return;
 		}
 	} else
 		perr("Wrong arguments!");
-	usage("set <16-bit memory address> <8-bit value>");
+	usage("set <16-bit memory address> <space separated 8-bit values>");
 }
 
 void load_action(CellStringParts parts, Cell *cell) {
@@ -270,14 +292,17 @@ static const char *longhelp[] = {
         "\n" husage(exec) "c050"
         "\nThe above command will cause the machine to execute consecutive instructions"
         "\nstarting from memory address 0xc050.",
-    "Using 'show', you can inspect (but not change) the content of a memory address."
-        "\n" husage(show) "c050"
-        "\nThe above command will print the byte stored at address 0xc050 in hexadecimal"
-        "\nformat.",
-    "To set the content of a specific memory address to a particular value, use 'set'"
+    "Using 'show', you can inspect (but not change) the contents in a range of memory addresses."
+        "\n" husage(show) "c050 c060"
+        "\nThe above command will print the bytes stored from address 0xc050 to addess 0xc060"
+        "\nin hexadecimal format."
+        "\nIf the second address is not specified, 'show' will only print the byte stored at"
+        "\nthe first address.",
+    "To set the content of a range of memory addresses to particular values, use 'set'"
         "\nlike the following : "
-        "\n" husage(set) "c050 3f"
-        "\nThe above will cause the value of memory address 0xc050 to be set to 0x3f.",
+        "\n" husage(set) "c050 3f 4b 5e 06"
+        "\nThe above will cause the consecutive addresses starting from c050, to be overwritten"
+        "\nwith the consecutive bytes.",
     "Given a file name and an address to store, invoking 'load' will cause the file"
         "\nto be compiled to valid 8085 bytecodes, and the bytecodes to be stored consecutively"
         "\nin memory starting from the given address."
