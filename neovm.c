@@ -1,6 +1,6 @@
-#include "vm.h"
 #include "common.h"
 #include "display.h"
+#include "vm.h"
 #include <stdio.h>
 #include <time.h>
 
