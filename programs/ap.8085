@@ -1,0 +1,22 @@
+// 8100     <-- A
+// 8101     <-- D
+// 8102     <-- N (must be > 1)
+// 8103 .. (8102 + N)   <-- Series
+
+lxi h, 8100h
+mov b, m
+inx h
+mov c, m
+inx h
+mov d, m
+mvi e, 0h
+mov a, b
+jmp save
+ap:
+add c
+save:
+inx h
+mov m, a
+dcr d
+jnz ap
+hlt
