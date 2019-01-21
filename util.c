@@ -89,9 +89,12 @@ int get_string_index(Keyword *keywords, siz numKeywords, const char *string, siz
     siz temp = start, matching = 1;
     while(temp < end && matching < length) {                    // the search is in boundary and not all letters have been checked
         if(keywords[temp].str[matching] == string[matching])    // if: present letter matches
-            matching++;                                         // then: check for the next letter
+            matching++;                                         //      then: check for the next letter
+        else if(keywords[temp].str[matching] > string[matching])// else if: present letter of 'string' is lesser than that of 'keyword'
+            break;                                              //      then: since 'keywords' is a sorted collection,
+                                                                //            'string' will not be found later, bail out
         else{                                                   // else: present letter doesn't match
-            temp++;                                             // so: check for the next word
+            temp++;                                             //      so: check for the next word
             while(temp < end && keywords[temp].length != length)
                 temp++;
         }
