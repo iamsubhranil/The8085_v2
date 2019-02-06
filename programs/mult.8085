@@ -1,0 +1,18 @@
+// A    <- c000
+// B    <- c001
+// A*B  <- c002
+
+lxi h, 0c000h
+mov a, m
+mov c, a
+inx h
+mov b, m
+dcr b
+loop:
+jz exit
+add c
+dcr b
+jmp loop
+exit:
+sta 0c002h
+hlt

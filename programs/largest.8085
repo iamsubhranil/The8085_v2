@@ -1,0 +1,20 @@
+// N    <-- c000
+// N numbers    <-- c001 .. (c000 + N)
+// Largest  --> (c001 + N)
+lxi h, 0c000h
+mov b, m
+inx h
+mov a, m
+loop:
+dcr b
+jz exit
+inx h
+mov c, m
+cmp c
+jnc loop
+mov a, c
+jmp loop
+exit:
+inx h
+mov m, a
+hlt

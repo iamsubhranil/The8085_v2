@@ -1,0 +1,21 @@
+// N    <-- 8000h
+// sqrt --> 8001h
+lxi h, 8000h
+mov a, m
+mvi b, 0ffh
+mvi c, 0h
+loop:
+mov e, a
+mov a, b
+adi 02h
+mov b, a
+mov a, e
+inr c
+sub b
+jz store
+jnc loop
+mvi c, 0eeh
+store:
+inx h
+mov m, c
+hlt

@@ -1,0 +1,48 @@
+// N    <-- c000
+// N consecutive numbers <-- c001 .. (c000 + N)
+// c001 .. (c000 + N)   --> Sorted numbers
+lxi h, 0c000h
+lxi sp, 0ffffh
+mov a, m    // a = n
+dcr a       // a = a - 1
+mov e, a    // e = a
+mvi c, 0h   // c = 0
+outer:
+mov a, e    // a = n - 1
+sub c       // a = n - i - 1
+mov d, a    // d = n - i - 1
+lxi h, 0c000h   // h = &array[-1]
+push b      // store b, c
+mvi c, 00h  // c = 0
+inner:
+inx h       // h = h + 1
+mov a, m    // a = array[h]
+inx h       // h = h + 1
+mov b, m    // b = array[h]
+dcx h       // h = h - 1
+cmp b       // carry = a - b
+jc next     // if (carry) then goto next
+            // otherwise a > b, swap
+push d      // store d, e
+mvi c, 01h  // c = 1
+mov e, a    // e = a
+mov a, b    // a = b
+mov b, e    // b = e
+mov m, a    // array[h] = a
+inx h       // h = h + 1
+mov m, b    // array[h] = b
+dcx h       // h = h - 1
+pop d       // restore d, e
+next:
+dcr d       // d = d - 1
+jnz inner   // if (d != 0) goto inner
+mov a, c    // a = c
+cpi 0h      // zero = a = 0
+jz exit     // if (zero) then goto exit
+pop b       // restore b, c
+inr c       // c = c + 1
+mov a, c    // a = c
+cmp e       // carry = a - f
+jc outer    // if (carry) then goto outer
+exit:
+hlt

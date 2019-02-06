@@ -1,0 +1,32 @@
+// a    <-- c000h
+// b    <-- c001h
+// c    <-- c002h
+// d    <-- c003h
+// a*b + c*d --> c004h
+
+lxi h, 0c000h
+mov a, m
+inx h
+mov b, m
+call mult
+mov d, a
+inx h
+mov a, m
+inx h
+mov b, m
+call mult
+add d
+inx h
+mov m, a
+hlt
+
+// a    <-- multiplicand
+// b    <-- multiplier
+// res  --> a
+mult:
+mov c, a
+loop:
+dcr b
+rz
+add c
+jmp loop

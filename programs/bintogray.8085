@@ -2,8 +2,10 @@
 // Output   --> 8001
 lxi h, 8000h
 mov a, m
-mov b, m
-rar
-xra b
+mov b, a
+stc
+cmc
+rar         // shift one bit to the right
+xra b       // xor
 sta 8001h
 hlt
