@@ -78,3 +78,12 @@ bool machine_remove_breakpoint(Machine *m, u16 addr) {
 void machine_reset_breakpoints(Machine *m) {
 	m->breakpoint_pointer = 0;
 }
+
+void machine_init(Machine *machine) {
+	machine->pc                 = 0;
+	machine->sp                 = 0xffff;
+	machine->breakpoint_pointer = 0;
+	machine->isbroken           = 0;
+	machine->issilent           = 0;
+	machine->sleepfor.tv_nsec   = 0;
+}

@@ -92,6 +92,7 @@ static bool run_source(const char *source, Machine *m, u8 *memory, u16 size,
 
 void test_all() {
 	Machine m;
+	machine_init(&m);
 	u8      memory[0xffff];
 	u16     size        = 0xffff;
 	char *  source      = NULL;

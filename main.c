@@ -269,15 +269,6 @@ void exit_action(CellStringParts parts, Cell *cell) {
 	cell->run = 0;
 }
 
-static void init_machine() {
-	machine.pc                 = 0;
-	machine.sp                 = 0xffff;
-	machine.breakpoint_pointer = 0;
-	machine.isbroken           = 0;
-	machine.issilent           = 0;
-	machine.sleepfor.tv_nsec   = 0;
-}
-
 // clang-format off
 // Descriptive help messages for the keywords
 static const char *longhelp[] = {
@@ -384,7 +375,7 @@ int main(int argc, char *argv[]) {
 #ifndef __AFL_COMPILER
 	dump_init();
 #endif
-	init_machine();
+	machine_init(&machine);
 #ifdef ENABLE_TESTS
 	test_all();
 #endif

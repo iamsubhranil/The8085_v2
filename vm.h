@@ -51,3 +51,4 @@ bool machine_add_breakpoint(Machine *m, u16 addr);
 bool machine_on_breakpoint(Machine *m, u8 *memory, u8 step);
 bool machine_remove_breakpoint(Machine *m, u16 addr);
 void machine_reset_breakpoints(Machine *m);
+void machine_init(Machine *m);
