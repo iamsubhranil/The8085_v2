@@ -20,6 +20,126 @@ static u16     memory_pointer  = 0;
 static u8      no_usage        = 0;
 static u8      load_successful = 0;
 
+// clang-format off
+// Descriptive help messages for the keywords
+static const char *longhelp[] = {
+    "'exec' can be used to execute some instructions stored in the memory. The machine will"
+        "\ncontinue executing consecutive instructions until either of the following three cases"
+        "\nhappened : "
+        "\n1. The machine encounters a " hins(hlt) " instruction."
+        "\n2. The program counter reaches a break point."
+        "\n3. The execution was started using a " hkw(step) " keyword, in which case,"
+        "\n   only one instruction will be executed and the contents of the registers"
+        "\n   and flags will be shown to the user after execution."
+        "\n" husage(exec) "c050"
+        "\nThe above command will cause the machine to execute consecutive instructions"
+        "\nstarting from memory address 0xc050.",
+    "Using 'show', you can inspect (but not change) the contents in a range of memory addresses."
+        "\n" husage(show) "c050 c060"
+        "\nThe above command will print the bytes stored from address 0xc050 to addess 0xc060"
+        "\nin hexadecimal format."
+        "\nIf the second address is not specified, 'show' will only print the byte stored at"
+        "\nthe first address.",
+    "To set the content of a range of memory addresses to particular values, use 'set'"
+        "\nlike the following : "
+        "\n" husage(set) "c050 3f 4b 5e 06"
+        "\nThe above will cause the consecutive addresses starting from c050, to be overwritten"
+        "\nwith the consecutive bytes.",
+    "Given a file name and an address to store, invoking 'load' will cause the file"
+        "\nto be compiled to valid 8085 bytecodes, and the bytecodes to be stored consecutively"
+        "\nin memory starting from the given address."
+        "\nIf the result of compilation was unsuccessful, appropiate messages are printed and"
+        "\nno guarantees are made on the content of the consecutive memory locations starting"
+        "\nfrom the given address."
+        "\nThis is usually referred to as 'file mode compilation' of The8085. The8085 also offers"
+        "\nanother mode of line by line compilation by using the " hkw(asm) " keyword. For"
+        "\nmore information, see '" hkw(help) " asm'."
+        "\n" husage(load) "test/loop.8085 c050"
+        "\nWhen the above command is used, 'test/loop.8085' is read by The8085 (if possible),"
+        "\ncompiled to original 8085 opcodes, and stored in consecutive memory locations"
+        "\nstarting from 0xc050.",
+    "'exit' will cause this REPL to release any dynamically allocated resources,"
+        "\nstop the REPL loop itself and return back to the parent shell."
+        "\n" husage(exit),
+    "'help' shows informative messages about the keywords in this shell."
+        "\nTo list all keywords of the shell, use : "
+        "\n" hcode(help)
+        "\nTo get a more descriptive message about a keyword and list its subcommands,"
+        "\nuse : "
+        "\n" hcode(help) "<keyword>"
+        "\nTo get information about a subcommand of a keyword, use : "
+        "\n" hcode(help) "<keyword> <subcommand>",
+    "'dis' is The8085 disassembler. It reads original 8085 opcodes from memory,"
+        "\nconverts the to assembly and prints them to the terminal."
+        "\nThe first address given to 'dis' is the starting address of disassembly,"
+        "\nbut 'dis' needs to know when to stop. Hence, for now, and explicit ending"
+        "\naddress is needed as an argument to 'dis', but this might change in the"
+        "\nfuture."
+        "\n" husage(dis) "c050 c06a"
+        "\nThe above will cause the disassembler to read and print all valid 8085"
+        "\ninstructions starting from 0xc050 upto (including) 0xc06a in memory.",
+    "'break' is The8085 breakpoint manager. You can add, remove or view"
+        "\nbreakpoints using the subcommands shown below. For more information on a"
+        "\nparticular subcommand, type : "
+        "\n" hcode(help) "break <subcommand>",
+    "After halting on a breakpoint, if you want to continue the execution"
+        "\nof the instructions until either the next breakpoint or a " hins(hlt)
+        "\noccurs, use 'continue'. Do remember though continue will only work"
+        "\nif the machine has been stopped by either a breakpoint or by issuing"
+        "\na " hkw(step) "."
+        "\n" husage(continue),
+    "After halting on a breakpoint, if you want the machine to execute only the next"
+        "\ninstruction and then halt again, use 'step'."
+        "\nThis will only work if the machine was halted on a breakpoint before."
+        "\n" husage(step),
+    "Use 'break view' to show all the attached breakpoints, sorted in the order of"
+        "\ninsertion."
+        "\n" husage(break) "view",
+    "To add a breakpoint at an address, i.e. to halt the machine when the program"
+        "\ncounter reaches a particular address, use 'break add' like the following : "
+        "\n" hcode(break) "add <address>"
+        "\nWhen the program counter reaches <address>, the machine will pause the execution,"
+        "\nprint all of its registers and status flags, and wait for further user input"
+        "\nto determine its execution. You can then either inspect memory (" hkw(set)
+        "\nand " hkw(show) "), execute only the next instruction i.e. the instruction at "
+        "\n<address> (" hkw(step) "), or continue execution until either the program ends"
+        "\nor a breakpoint has occurred (" hkw(continue) ")."
+        "\nAll other keywords of the shell will also remain fully valid at that state and"
+        "\ntogether will constitute a powerful and robust debugging solution for the system."
+        "\nIf you add more than one breakpoints at the same address, only the first will"
+        "\nremain available.",
+    "To remove a previously attached breakpoint by its address, use 'break remove'."
+        "\n" husage(break) "remove <address>"
+        "\nIf <address> was not previously attached as a breakpoint, an error message"
+        "\nwill be shown.",
+    "The host machine that The8085 is being executed on is way more powerful and fast"
+        "\nthan an original 8085 chip. To manually slow down the execution of the virtual"
+        "\nmachine, you can use 'calibrate', which will try to bound the execution to"
+        "\n~3MHz. It is not perfect yet, and the only way to reset back to the original"
+        "\nspeed of the host machine is by exit and reenter for now, so use with caution."
+        "\n" husage(calibrate),
+    "Guide is your guide to The8085. You'll be guided through a quick tour of all the"
+        "\nfunctionalities and usage of the keywords of The8085. At the end of the tour,"
+        "\nyou should be able to load, disassemble, execute, inspect and debug The8085"
+        "\nprograms with ease."
+        "\n" husage(guide),
+    "To start a guide on a specific chapter, use " hkw(chapter) " like the following : "
+        "\n" husage(chapter) " <chapter_no>"
+        "\nWhere <chapter_no> is one of the following : "
+        "\nChapter                                              Topic"
+        "\n=======                   ============================================================"
+        "\n   1                      Compiling and loading an assembly language program in memory"
+        "\n   2                      Disassembling a chunk of memory to view the loaded program"
+        "\n   3                      Setting inputs for a program in memory"
+        "\n   4                      Executing a program loaded in memory"
+        "\n   5                      Viewing the output of a program from memory"
+        "\n   6                      Managing breakpoints in a program for debugging"
+        "\n   7                      Stepping into a single instruction to find wrong code"
+        "\n   8                      Continuing the execution of a program after " hkw(break)
+};
+
+// clang-format on
+
 static void usage(const char *usg) {
 	if(no_usage)
 		return;
@@ -269,107 +389,38 @@ void exit_action(CellStringParts parts, Cell *cell) {
 	cell->run = 0;
 }
 
-// clang-format off
-// Descriptive help messages for the keywords
-static const char *longhelp[] = {
-    "'exec' can be used to execute some instructions stored in the memory. The machine will"
-        "\ncontinue executing consecutive instructions until either of the following three cases"
-        "\nhappened : "
-        "\n1. The machine encounters a " hins(hlt) " instruction."
-        "\n2. The program counter reaches a break point."
-        "\n3. The execution was started using a " hkw(step) " keyword, in which case,"
-        "\n   only one instruction will be executed and the contents of the registers"
-        "\n   and flags will be shown to the user after execution."
-        "\n" husage(exec) "c050"
-        "\nThe above command will cause the machine to execute consecutive instructions"
-        "\nstarting from memory address 0xc050.",
-    "Using 'show', you can inspect (but not change) the contents in a range of memory addresses."
-        "\n" husage(show) "c050 c060"
-        "\nThe above command will print the bytes stored from address 0xc050 to addess 0xc060"
-        "\nin hexadecimal format."
-        "\nIf the second address is not specified, 'show' will only print the byte stored at"
-        "\nthe first address.",
-    "To set the content of a range of memory addresses to particular values, use 'set'"
-        "\nlike the following : "
-        "\n" husage(set) "c050 3f 4b 5e 06"
-        "\nThe above will cause the consecutive addresses starting from c050, to be overwritten"
-        "\nwith the consecutive bytes.",
-    "Given a file name and an address to store, invoking 'load' will cause the file"
-        "\nto be compiled to valid 8085 bytecodes, and the bytecodes to be stored consecutively"
-        "\nin memory starting from the given address."
-        "\nIf the result of compilation was unsuccessful, appropiate messages are printed and"
-        "\nno guarantees are made on the content of the consecutive memory locations starting"
-        "\nfrom the given address."
-        "\nThis is usually referred to as 'file mode compilation' of The8085. The8085 also offers"
-        "\nanother mode of line by line compilation by using the " hkw(asm) " keyword. For"
-        "\nmore information, see '" hkw(help) " asm'."
-        "\n" husage(load) "test/loop.8085 c050"
-        "\nWhen the above command is used, 'test/loop.8085' is read by The8085 (if possible),"
-        "\ncompiled to original 8085 opcodes, and stored in consecutive memory locations"
-        "\nstarting from 0xc050.",
-    "'exit' will cause this REPL to release any dynamically allocated resources,"
-        "\nstop the REPL loop itself and return back to the parent shell."
-        "\n" husage(exit),
-    "'help' shows informative messages about the keywords in this shell."
-        "\nTo list all keywords of the shell, use : "
-        "\n" hcode(help)
-        "\nTo get a more descriptive message about a keyword and list its subcommands,"
-        "\nuse : "
-        "\n" hcode(help) "<keyword>"
-        "\nTo get information about a subcommand of a keyword, use : "
-        "\n" hcode(help) "<keyword> <subcommand>",
-    "'dis' is The8085 disassembler. It reads original 8085 opcodes from memory,"
-        "\nconverts the to assembly and prints them to the terminal."
-        "\nThe first address given to 'dis' is the starting address of disassembly,"
-        "\nbut 'dis' needs to know when to stop. Hence, for now, and explicit ending"
-        "\naddress is needed as an argument to 'dis', but this might change in the"
-        "\nfuture."
-        "\n" husage(dis) "c050 c06a"
-        "\nThe above will cause the disassembler to read and print all valid 8085"
-        "\ninstructions starting from 0xc050 upto (including) 0xc06a in memory.",
-    "'break' is The8085 breakpoint manager. You can add, remove or view"
-        "\nbreakpoints using the subcommands shown below. For more information on a"
-        "\nparticular subcommand, type : "
-        "\n" hcode(help) "break <subcommand>",
-    "After halting on a breakpoint, if you want to continue the execution"
-        "\nof the instructions until either the next breakpoint or a " hins(hlt)
-        "\noccurs, use 'continue'. Do remember though continue will only work"
-        "\nif the machine has been stopped by either a breakpoint or by issuing"
-        "\na " hkw(step) "."
-        "\n" husage(continue),
-    "After halting on a breakpoint, if you want the machine to execute only the next"
-        "\ninstruction and then halt again, use 'step'."
-        "\nThis will only work if the machine was halted on a breakpoint before."
-        "\n" husage(step),
-    "Use 'break view' to show all the attached breakpoints, sorted in the order of"
-        "\ninsertion."
-        "\n" husage(break) "view",
-    "To add a breakpoint at an address, i.e. to halt the machine when the program"
-        "\ncounter reaches a particular address, use 'break add' like the following : "
-        "\n" hcode(break) "add <address>"
-        "\nWhen the program counter reaches <address>, the machine will pause the execution,"
-        "\nprint all of its registers and status flags, and wait for further user input"
-        "\nto determine its execution. You can then either inspect memory (" hkw(set)
-        "\nand " hkw(show) "), execute only the next instruction i.e. the instruction at "
-        "\n<address> (" hkw(step) "), or continue execution until either the program ends"
-        "\nor a breakpoint has occurred (" hkw(continue) ")."
-        "\nAll other keywords of the shell will also remain fully valid at that state and"
-        "\ntogether will constitute a powerful and robust debugging solution for the system."
-        "\nIf you add more than one breakpoints at the same address, only the first will"
-        "\nremain available.",
-    "To remove a previously attached breakpoint by its address, use 'break remove'."
-        "\n" husage(break) "remove <address>"
-        "\nIf <address> was not previously attached as a breakpoint, an error message"
-        "\nwill be shown.",
-    "The host machine that The8085 is being executed on is way more powerful and fast"
-        "\nthan an original 8085 chip. To manually slow down the execution of the virtual"
-        "\nmachine, you can use 'calibrate', which will try to bound the execution to"
-        "\n~3MHz. It is not perfect yet, and the only way to reset back to the original"
-        "\nspeed of the host machine is by exit and reenter for now, so use with caution."
-        "\n" husage(calibrate),
-};
+// press any key to continue
+static void pakc() {
+    printf("[Press any key to continue] ");
+    getc(stdin);
+    fflush(stdin);
+    printf("\r\t\t\t\t\t\t\t\t\r");
+}
 
-// clang-format on
+#define pguide(...) phgrn("[guide] ", __VA_ARGS__)
+
+void guide_action(CellStringParts parts, Cell *cell) {
+    (void)parts; (void)cell;
+    Cell gterm = cell_init(ANSI_FONT_BOLD ANSI_COLOR_GREEN ">>" ANSI_COLOR_RESET);
+    CellKeyword help = cell_create_keyword("help", "Show this help", cell_default_help);
+    help.longhelp = longhelp[5];
+    CellKeyword chapter = cell_create_keyword("chapter", "Start a chapter", cell_default_help);
+    chapter.longhelp = longhelp[15];
+    cell_insert_keyword(&gterm, help);
+    cell_insert_keyword(&gterm, chapter);
+    phgrn("\n[guide] ", "Hi! Welcome to The8085 guide!\n");
+    pakc();
+    pguide("The8085 is an IDE (sorta, except an 'editor') to write, compile and execute\n");
+    pguide("8085 assembly language programs.\n");
+    pakc();
+    pguide("The guide is broken into several chapters.  You can navigate between them as\n");
+    pguide("you wish. First, write " hkw(help) " in the next prompt to see available\n");
+    pguide("navigation options.");
+    cell_repl(&gterm);
+    pguide("First, let's compile and load an assembly language program to memory.\n");
+    pguide("In the next prompt, write the following : \n");
+    pguide(husage(load) " programs/add16.8085 c050");
+}
 
 int main(int argc, char *argv[]) {
 #ifndef __AFL_COMPILER
@@ -478,6 +529,11 @@ int main(int argc, char *argv[]) {
 	    "Calibrate the virtual machine to better sync with the host",
 	    calb_action);
 	calb.longhelp = longhelp[13];
+	CellKeyword guide = cell_create_keyword(
+	        "guide",
+	        "Run through a quick tour of how-tos",
+	        guide_action);
+	guide.longhelp = longhelp[14];
 	cell_add_subkeyword(&brk, brkview);
 	cell_add_subkeyword(&brk, brkadd);
 	cell_add_subkeyword(&brk, brkrem);
@@ -492,6 +548,7 @@ int main(int argc, char *argv[]) {
 	cell_insert_keyword(&cell, cont);
 	cell_insert_keyword(&cell, step);
 	cell_insert_keyword(&cell, calb);
+	cell_insert_keyword(&cell, guide);
 	asm_init(&cell, &memory[0]);
 	cell_repl(&cell);
 	cell_destroy(&cell);
