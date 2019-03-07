@@ -1,0 +1,34 @@
+// a        <-- 8000h
+// b        <-- 8001h
+// a3 - b3  --> 8002h
+
+lxi h, 8000h
+mov d, m
+inx h
+mov e, m
+lxi b, 0h
+mov a, d
+mov b, d
+call mult
+mov b, d
+call mult
+mov d, a
+mov a, e
+mov b, e
+call mult
+mov b, e
+call mult
+mov e, a
+mov a, d
+sub e
+inx h
+mov m, a
+hlt
+
+mult:
+mov c, a
+loop:
+dcr b
+rz
+add c
+jmp loop

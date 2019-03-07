@@ -1,0 +1,32 @@
+// N                <-- 8000h
+// item1 .. item2   <-- 8001 .. (8000 + N)
+// output in place
+
+lxi h, 8000h
+mov b, m
+loop:
+inx h
+mov a, m
+rar
+jc odd
+ral
+ral
+jc even_neg
+mvi a, 00h
+jmp next
+even_neg:
+mvi a, 01h
+jmp next
+odd:
+ral
+ral
+jc odd_neg
+mvi a, 02h
+jmp next
+odd_neg:
+mvi a, 03h
+next:
+mov m, a
+dcr b
+jnz loop
+hlt

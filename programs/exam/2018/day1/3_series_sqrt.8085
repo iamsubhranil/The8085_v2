@@ -1,0 +1,97 @@
+// N                <-- 8000
+// item1 .. itemN   <-- 8001 .. (8000 + N)
+// sqrt1 .. sqrtN   <-- (8000 + N) .. (8000 + 2N)
+
+// Load N to C
+lxi h, 8000h
+mov c, m
+
+// Copy HL to DE
+mov d, h
+mov e, l
+// Find (8000 + N) to store the roots
+mvi b, 0h
+dad b
+
+// Exchange DE and HL
+// so that HL points to
+// the original series
+// and DE points to where
+// roots will be stored
+xchg
+
+loop:
+// Point to next value
+inx h
+// Move that to A
+mov a, m
+// Perform root
+call sqrt
+// Now A contains the root,
+// and DE points to the location
+// to store it, so increment
+// DE
+inx d
+// and store the root
+stax d
+// Decrement N
+dcr c
+// Go back to loop if elements
+// remaining
+jnz loop
+// Exit
+hlt
+
+// Input
+// A <-- number
+// Output
+// sqrt --> A
+sqrt:
+// Save the registers
+push b
+push d
+push h
+// Prepare for sqrt
+mvi b, 01h
+mvi c, 02h
+mvi d, 0h
+// Loop
+sqrt_loop:
+// Speculatively increment
+// the root first
+inr d
+// subtract B
+sub b
+// If B > A, then our speculative
+// increment was wrong, as well as
+// A is not perfect square
+jc sqrt_exit_adjust
+// A is perfect square and our increment
+// of D was right, exit now
+jz sqrt_exit
+// Copy A
+mov e, a
+// B <-- B + 02
+mov a, b
+add c
+mov b, a
+// Restore A
+mov a, e
+// Loop
+jmp sqrt_loop
+// We reached here, i.e. A is not a
+// perfect square, but we incremented
+// D anyway, so lets decrement that
+// first
+sqrt_exit_adjust:
+dcr d
+// Exit
+sqrt_exit:
+// Save D to A
+mov a, d
+// Restore registers
+pop h
+pop d
+pop b
+// Exit
+ret

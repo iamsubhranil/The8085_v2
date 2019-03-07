@@ -1,0 +1,39 @@
+// A    <-- 8000h
+// B    <-- 8001h
+
+lxi h, 8000h
+mov a, m
+mov b, m
+call mult
+inx h
+inx h
+mov m, e
+inx h
+mov m, d
+dcx h
+dcx h
+mov b, m
+call mult
+inx h
+inx h
+inx h
+mov m, e
+inx h
+mov m, d
+hlt
+
+mult:
+push h
+mvi h, 0h
+mov l, a
+mvi d, 0h
+mov e, a
+loop:
+dcr b
+jz mult_exit
+dad d
+jmp loop
+mult_exit:
+xchg
+pop h
+ret

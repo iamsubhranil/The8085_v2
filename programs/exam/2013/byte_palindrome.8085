@@ -1,0 +1,28 @@
+// byte   <--  8000h
+// output -->  8001h
+
+lxi h, 8000h
+mov a, m
+mov c, a
+mvi b, 08h
+mvi d, 00h
+stc
+cmc
+loop:
+rar
+mov e, a
+mov a, d
+ral
+mov d, a
+mov a, e
+dcr b
+jnz loop
+mvi e, 0h
+mov a, c
+xra d
+jnz store
+inr e
+store:
+inx h
+mov m, e
+hlt

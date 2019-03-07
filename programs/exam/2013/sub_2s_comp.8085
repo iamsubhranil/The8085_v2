@@ -1,0 +1,23 @@
+// subtrahend   <-- 8000
+// minued       <-- 8001
+// result       --> 8002
+// borrow       --> 8003
+
+lxi h, 8000h
+mov b, m
+inx h
+mov a, m
+cma
+inr a
+add b
+mvi c, 0h
+jc ignore
+cma
+inr a
+inr c
+ignore:
+inx h
+mov m, a
+inx h
+mov m, c
+hlt

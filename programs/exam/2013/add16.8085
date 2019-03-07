@@ -1,0 +1,20 @@
+// add two 16-bit numbers and subtract 38h from the sum
+// num11 <-- 8000h
+// num12 <-- 8001h
+// num21 <-- 8002h
+// num22 <-- 8003h
+// res11 --> 8004h
+// res12 --> 8005h
+
+lhld 8000h
+xchg
+lhld 8002h
+dad d
+mov a, l
+sui 38h
+mov l, a
+jnc store
+dcr h
+store:
+shld 8004h
+hlt

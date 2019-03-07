@@ -1,0 +1,33 @@
+// N                <-- 8000
+// item1 .. itemN   <-- 8001 .. (8001 + N)
+// third smallest   --> 8001 + N + 1
+
+lxi h, 8000h
+mov e, m
+inx h
+mov b, m
+mov c, m
+mov d, m
+dcx h
+loop:
+inx h
+mov a, m
+cmp b
+jnc second
+mov b, a
+jmp next
+second:
+cmp c
+jnc third
+mov c, a
+jmp next
+third:
+cmp d
+jnc next
+mov d, a
+next:
+dcr e
+jnz loop
+inx h
+mov m, d
+hlt

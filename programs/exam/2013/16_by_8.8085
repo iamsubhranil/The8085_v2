@@ -1,0 +1,36 @@
+// byte1    <-- 8000h
+// byte0    <-- 8001h
+// div0     <-- 8002h
+// quo1     --> 8003h
+// quo0     --> 8004h
+// rem0     --> 8005h
+
+lxi h, 8000h
+mov b, m
+inx h
+mov a, m
+inx h
+mov c, m
+lxi d, 0h
+loop:
+sub c
+inx d
+jnc loop
+mov h, a
+mov a, b
+sui 01h
+mov b, a
+mov a, h
+jc save
+jmp loop
+save:
+dcx d
+add c
+mvi h, 80h
+inx h
+mov m, d
+inx h
+mov m, e
+inx h
+mov m, a
+hlt

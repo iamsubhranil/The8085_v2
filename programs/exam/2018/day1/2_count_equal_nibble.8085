@@ -1,0 +1,29 @@
+// Input
+// N                <-- 8000
+// item1 .. itemN   <-- 8001 .. (8000 + N)
+// count            --> 8001 + N
+
+lxi h, 8000h
+mov d, m
+mvi c, 00h
+loop:
+inx h
+mov a, m
+mov b, m
+ani 0fh
+mov e, a
+mov a, b
+ani 0f0h
+rar
+rar
+rar
+rar
+xra e
+jnz next
+inr c
+next:
+dcr d
+jnz loop
+inx h
+mov m, c
+hlt

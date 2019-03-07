@@ -1,0 +1,25 @@
+// First Number     <-- 8000
+// Second Number    <-- 8001
+// GCD              --> 8002
+
+lxi h, 8000h
+mov a, m
+inx h
+mov b, m
+loop:
+cmp b
+jz save
+jc alterb
+sub b
+jmp loop
+alterb:
+mov c, a
+mov a, b
+sub c
+mov b, a
+mov a, c
+jmp loop
+save:
+inx h
+mov m, a
+hlt

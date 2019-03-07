@@ -1,0 +1,30 @@
+// N                <-- 8000
+// item1 .. itemN   <-- 8001 .. (8001 + N)
+// count            --> 8001 + N + 1
+
+lxi h, 8000h
+mov b, m
+mvi c, 0h
+loop:
+inx h
+mov a, m
+call checkope
+dcr b
+jnz loop
+inx h
+mov m, c
+hlt
+
+checkope:
+mvi d, 08h
+rar
+jc checkpe
+ret
+checkpe:
+ral
+ora a
+jpe yes
+ret
+yes:
+inr c
+ret

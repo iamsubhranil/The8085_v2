@@ -1,0 +1,34 @@
+// N                <-- 8000
+// item1 .. itemN   <-- 8001 .. (8001 + N)
+// inplace sort
+
+lxi h, 8000h
+mvi b, 0h
+mov c, m
+mov d, h
+mov e, l
+loop:
+mov b, c
+dcr b
+jz outernext
+inx d
+mov h, d
+mov l, e
+mov a, m
+inner:
+inx h
+cmp m
+jc next
+push d
+mov d, a
+mov a, m
+mov m, d
+pop d
+next:
+dcr b
+jnz inner
+stax d
+outernext:
+dcr c
+jnz loop
+hlt

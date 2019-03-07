@@ -1,0 +1,226 @@
+// N    <-- 8000h
+// item1 .. itemN   <-- 8001 .. (8000 + N)
+
+lxi sp, 0ffffh
+lxi h, 8000h
+mov b, m    // hi
+dcr b
+mvi a, 0h   // low
+inx h
+call mergesort
+hlt
+
+saveall:
+push psw
+push b
+push d
+push h
+ret
+
+restoreall:
+pop h
+pop d
+pop b
+pop psw
+ret
+
+// hi -> b
+// low -> a
+mergesort:
+cmp b
+rnc
+
+// saveall
+push psw
+push b
+push d
+push h
+// saveall
+
+mov c, a    // baklow = a
+add b       // a = a + b
+rar         // a = a / 2 -> mid = a
+stc
+cmc
+mov d, b    // bakhi = b
+mov b, a    // b = mid -> b = hi
+mov a, c    // a = low
+call mergesort
+push psw    // save low
+mov a, b    // a = mid
+inr a       // a = mid + 1 -> a = low
+mov b, d    // b = bakhi
+call mergesort
+mov c, b    // c = hi
+dcr a       // a = mid + 1 - 1 -> a = mid
+mov b, a    // b = mid
+pop psw     // a = low
+call sorted_merge
+
+// restoreall
+pop h
+pop d
+pop b
+pop psw
+// restoreall
+
+ret
+
+// HL <- HL + a
+addhla:
+push d
+mvi d, 00h
+mov e, a
+dad d
+pop d
+ret
+
+// HL <- HL + d
+addhld:
+push d
+mov e, d
+mvi d, 00h
+dad d
+pop d
+ret
+
+// save accumulator to temp array
+savetemp:
+push h
+lhld 8100h
+mov m, a
+inx h
+shld 8100h
+pop h
+ret
+
+// save d to temp array
+savetemp2:
+push h
+lhld 8100h
+mov m, a
+inx h
+shld 8100h
+pop h
+ret
+
+// low  -> a
+// mid  -> b
+// hi   -> c
+sorted_merge:
+
+// saveall
+push psw
+push b
+push d
+push h
+// saveall
+
+// mid + 1 -> d
+mov d, c
+inr d
+push psw
+push h
+lxi h, 8101h
+shld 8100h
+
+sorted_merge_loop:
+pop h  // hl <- base
+cmp b
+jz copyb
+push psw
+mov a, d
+cmp c
+jz copya
+pop psw
+push h
+call addhld // hl <- pm
+push psw
+mov a, m
+inx sp
+pop h
+dcx sp
+dcx sp
+push psw
+inx sp
+pop psw
+dcx sp
+dcx sp
+call addhla // hl <- pl
+pop psw
+cmp m
+jc savepm
+mov a, m
+call savetemp
+pop psw
+inr a
+jmp next
+savepm:
+inr d
+call savetemp
+pop psw
+next:
+jmp sorted_merge_loop
+
+copya:
+pop psw
+push h
+copya_loop:
+inr a
+cmp b
+jnc copya_loop_verify
+pop h
+dcx sp
+call addhla
+mov d, m
+call savetemp2
+jmp copya_loop
+copya_loop_verify:
+jz copya_loop
+jmp sorted_merge_store
+
+copyb:
+push psw
+mov a, d
+push h
+copyb_loop:
+inr a
+cmp c
+jnz copyb_loop_verify
+pop h
+dcx sp
+call addhla
+mov d, m
+call savetemp2
+pop psw
+copyb_loop_verify:
+jz copyb_loop
+jmp sorted_merge_store
+
+sorted_merge_store:
+lxi d, 8101h
+pop h
+pop psw
+call addhla
+mov b, c
+store_loop:
+cmp b
+jz sorted_merge_exit
+push psw
+mov a, m
+stax d
+inx d
+inx h
+pop psw
+jmp store_loop
+
+sorted_merge_exit:
+
+// restoreall
+pop h
+pop d
+pop b
+pop psw
+// restoreall
+
+ret

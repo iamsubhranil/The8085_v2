@@ -1,0 +1,93 @@
+// N            <-- 8000
+// item1 .. itemN   <-- 8001 .. (8000 + N)
+// in place sort
+
+// Load N to E
+lxi h, 8000h
+mov e, m
+// Initialize outer counter by 1
+mvi d, 1h
+// We skip the first element,
+// because it cannot be compared
+// with any previous elements
+inx h
+// Save h
+push h
+outer:
+// Restore HL, which now points to the
+// Dth element
+pop h
+// Since the array is already sorted
+// upto D-1, Dth element is our element
+// to compare
+inx h
+// We store present HL as a basis
+// of next comparison
+push h
+// Load the element to compare with A
+mov a, m
+// We initialize the inner counter with
+// D. Since D-1 elements are already
+// sorted, C will go from D to 0
+mov c, d
+
+inner:
+// Point to the previous element
+// i.e. present element = previous element
+dcx h
+// First, we speculatively copy present
+// element to next position, considering
+// the element at hand (A) is going to be
+// lesser than the present element, i.e.
+// we have to keep moving backward
+mov b, m
+inx h
+mov m, b
+dcx h
+// Now, finally, we comapre A with present
+// element
+cmp m
+// If A > present element, we have found 
+// the place for A to be, and that is the next
+// position, i.e. HL + 1
+jnc increment_and_store
+// If A <= present element, A will be placed
+// someplace even backward, so keep looking
+dcr c
+// If we have not searched all D-1 elements,
+// let's do it
+jnz inner
+// We have exhausted all D-1 elements, but
+// still not found a place for A to be. Hence,
+// A is going to be placed as the 0th element 
+// of the array, where HL already points to
+// at this situation. Now, we have already
+// done the mechanism to store A under 
+// 'increment_and_store', but it increments
+// HL first, so we decrement it here to
+// cancel out the effect and store A at
+// present position instead
+dcx h
+// We have reached here, it means that
+// we found A to be greater than the present
+// element, so A is going to be stored as
+// the next element, i.e. at HL + 1
+increment_and_store:
+// Increment HL
+inx h
+// and store A
+mov m, a
+// A is placed where it needs to be, 
+// hence the inner loop is exhausted.
+// Let's go for the next element.
+
+// Check if D < N
+inr d
+mov a, d
+cmp e
+// If it is, we've got element to
+// place. Let's do it all over again
+jc outer
+
+// We've sorted the whole array, exit now.
+hlt

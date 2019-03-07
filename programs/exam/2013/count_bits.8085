@@ -1,0 +1,37 @@
+// N              <-- 8000
+// item1 .. itemN <-- 8001 .. (8001 + N)
+// number of 0    --> 8001 + N + 1
+// number of 1    --> 8001 + N + 2
+
+lxi h, 8000h
+mov b, m
+lxi d, 0h
+loop:
+inx h
+mov a, m
+call count
+dcr b
+jnz loop
+inx h
+mov m, d
+inx h
+mov m, e
+hlt
+
+// Count the number of 1s and 0s
+// in the value stored in A
+// 0s --> d
+// 1s --> e
+count:
+mvi c, 08h
+loop:
+rar
+jc bit1
+inr d
+jmp next
+bit1:
+inr e
+next:
+dcr c
+jnz loop
+ret

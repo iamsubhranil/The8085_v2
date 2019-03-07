@@ -1,0 +1,30 @@
+// N        <-- 8000h
+// 1 1 2 .. N   --> 8001 .. XXXX
+// count of odds --> XXXX + 1
+
+lxi h, 8000h
+mov c, m
+mvi a, 01h
+mvi b, 00h
+mvi e, 01h
+loop:
+inx h
+mov m, a
+mov d, a
+add b
+cmp c
+jnc exit
+rar
+jnc shift
+ral
+inr e
+jmp next
+shift:
+ral
+next:
+mov b, d
+jmp loop
+exit:
+inx h
+mov m, e
+hlt

@@ -1,0 +1,12 @@
+// Input
+// X    <-- 8000h
+// Y    <-- 8002h
+// Z    --> 8004h
+
+lda 8000h
+ral
+mov b, a
+lda 8002h
+add b
+sta 8004h
+hlt

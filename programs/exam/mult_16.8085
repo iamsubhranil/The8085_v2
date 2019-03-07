@@ -1,0 +1,34 @@
+// multiplicand0    <-- 8000h
+// multiplicand1    <-- 8001h
+// multiplier0      <-- 8002h
+// multiplier1      <-- 8003h
+// result0          --> 8004h
+// result1          --> 8005h
+// result2          --> 8006h
+// result3          --> 8007h
+
+lxi sp, 0ffffh
+lhld 8000h
+xchg
+lhld 8002h
+mov c, l
+mov b, h
+lxi h, 0h
+push h
+dad b
+loop:
+dcx b
+mov a, b
+ora c
+jz store
+dad d
+jnc loop
+xthl
+inx h
+xthl
+jmp loop
+store:
+shld 8004h
+xthl
+shld 8006h
+hlt
