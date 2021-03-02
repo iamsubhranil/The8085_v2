@@ -114,15 +114,18 @@ static void dump_free() {
 #ifdef STACKTRACE_SHOW
 
 typedef struct {
-	char *name, *offset, *address;
+	char *name, *offset;
 } ProgramInfo;
 
 static ProgramInfo get_program_info(const char *address) {
 	siz         i = 0;
-	ProgramInfo p;
-	while(address[i] != '(' && address[i + 1] != '+' && address[i + 2] != '0' &&
-	      address[i] != 'x')
+	ProgramInfo p = {NULL, NULL};
+	while(address[i] && (address[i] != '(' || address[i + 1] != '+' ||
+	                     address[i + 2] != '0' || address[i + 3] != 'x'))
 		i++;
+	if(address[i] == 0) {
+		return p;
+	}
 	char *name = (char *)malloc(i + 1);
 	strncpy(name, address, i);
 	name[i] = '\0';
@@ -146,6 +149,16 @@ static int addr2line(const char *addr) {
 	char addr2line_cmd[512] = {0};
 
 	ProgramInfo info = get_program_info(addr);
+	if(info.name == NULL || info.offset == NULL) {
+		printf(ANSI_COLOR_RED ANSI_FONT_BOLD "\n[#%" Pi64 "] " ANSI_COLOR_RESET
+		                                     " %s",
+		       stack_count--, addr);
+		if(info.name)
+			free(info.name);
+		if(info.offset)
+			free(info.offset);
+		return 1;
+	}
 	/* have addr2line map the address to the relent line in the code */
 #ifdef __APPLE__
 	/* apple does things differently... */
