@@ -263,6 +263,11 @@ If you want the underlying virtual machine to match the speed of a real 8085 mic
 [Info] Not enough frequency delta to calibrate!
 >> _
 ``` 
+
+#### Screenshots
+![Img0](./img/img0.png)
+![Img1](./img/img1.png)
+
 #### Supporting development
 If you want to support the development of this project, **get involved**! Make a PR to any feature that you have in mind, trying to maintain the code style fully. Compile with `-DENABLE_TESTS` and make sure all of them passes.
 
